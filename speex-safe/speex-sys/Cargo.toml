@@ -1,0 +1,30 @@
+[package]
+name = "speex-sys"
+authors = [
+    "Rob Bailey <actioninja@criticalaction.net>",
+    "Xiph.org Foundation",
+]
+version = "0.1.0"
+edition = "2021"
+license = "MPL-2.0 AND BSD-3-Clause"
+description = "Unsafe rust bindings to the speex audio compression library"
+repository = "https://github.com/actioninja/speex-sys"
+categories = ["external-ffi-bindings", "multimedia::audio", "encoding"]
+keywords = ["speex", "libspeex", "vorbis", "compression"]
+links = "speex"
+include = [
+    "/build.rs",
+    "/LICENSE.md",
+    "/README.md",
+    "/wrapper.h",
+    "/src",
+    "/speex/AUTHORS",
+    "/speex/COPYING",
+    "/speex/libspeex/**/*.c",
+    "/speex/libspeex/**/*.h",
+    "/speex/include/speex/**/*.h",
+]
+
+[build-dependencies]
+bindgen = "0.65"
+cc = "1.0"
