@@ -4,7 +4,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can    /
 // obtain one at http://mozilla.org/MPL/2.0/.                                  /
 ////////////////////////////////////////////////////////////////////////////////
-use bindgen::CargoCallbacks;
+use bindgen::{CargoCallbacks, MacroTypeVariation};
 use std::env;
 use std::path::PathBuf;
 
@@ -69,6 +69,7 @@ fn main() {
     ccomp.compile("speex");
 
     let bindings = bindgen::Builder::default()
+        .default_macro_constant_type(MacroTypeVariation::Signed)
         .header("wrapper.h")
         .parse_callbacks(Box::new(CargoCallbacks))
         .generate()
