@@ -10,8 +10,8 @@ use speex_sys::{
     speex_lib_ctl, SPEEX_LIB_GET_EXTRA_VERSION, SPEEX_LIB_GET_MAJOR_VERSION,
     SPEEX_LIB_GET_MICRO_VERSION, SPEEX_LIB_GET_MINOR_VERSION, SPEEX_LIB_GET_VERSION_STRING,
 };
-use std::ffi::{c_char, c_int, c_void, CString};
-use std::ptr::null_mut;
+use std::ffi::{c_char, c_int, c_void, CStr};
+use std::ptr::null;
 pub use stereo_state::SpeexStereoState;
 
 pub fn get_major_version() -> i32 {
@@ -45,23 +45,26 @@ pub fn get_micro_version() -> i32 {
 }
 
 pub fn get_extra_version() -> String {
-    let cstring = unsafe {
-        let mut str_ptr = null_mut();
-        speex_lib_ctl(SPEEX_LIB_GET_EXTRA_VERSION as c_int, str_ptr);
-        let str_ptr = str_ptr as *mut c_char;
-        CString::from_raw(str_ptr)
+    let cstr = unsafe {
+        let mut str = null();
+        let str_ptr = &mut str as *mut *const c_char;
+        speex_lib_ctl(SPEEX_LIB_GET_EXTRA_VERSION as c_int, str_ptr as *mut c_void);
+        CStr::from_ptr(str)
     };
-    cstring.into_string().unwrap()
+    cstr.to_string_lossy().into_owned()
 }
 
 pub fn get_version_string() -> String {
-    let cstring = unsafe {
-        let mut str_ptr = null_mut();
-        speex_lib_ctl(SPEEX_LIB_GET_VERSION_STRING as c_int, str_ptr);
-        let str_ptr = str_ptr as *mut c_char;
-        CString::from_raw(str_ptr)
+    let cstr = unsafe {
+        let mut str = null();
+        let str_ptr = &mut str as *mut *const c_char;
+        speex_lib_ctl(
+            SPEEX_LIB_GET_VERSION_STRING as c_int,
+            str_ptr as *mut c_void,
+        );
+        CStr::from_ptr(str)
     };
-    cstring.into_string().unwrap()
+    cstr.to_string_lossy().into_owned()
 }
 
 #[cfg(test)]
@@ -71,6 +74,6 @@ mod test {
     #[test]
     fn correct_version_outputs() {
         let version_string = get_version_string();
-        panic!("{version_string}")
+        assert_eq!(&version_string, "speex-1.2.1")
     }
 }

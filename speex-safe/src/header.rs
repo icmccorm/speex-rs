@@ -1,6 +1,5 @@
 use crate::mode::SpeexMode;
 use speex_sys::SpeexHeader as SysHeader;
-use speex_sys::SpeexMode as SysMode;
 use std::mem::MaybeUninit;
 
 /// ## Why doesn't this implement `Drop`?
