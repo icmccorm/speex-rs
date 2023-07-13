@@ -159,3 +159,15 @@ impl<'a> Drop for SpeexBits<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::SpeexBits;
+
+    #[test]
+    fn creates_and_drops() {
+        {
+            let mut bits = SpeexBits::new();
+        }
+    }
+}
