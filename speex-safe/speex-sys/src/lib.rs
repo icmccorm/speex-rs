@@ -13,14 +13,19 @@ include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::ffi::c_int;
-    use std::ptr::null_mut;
+    use std::ffi::{c_char, c_void, CStr};
+    use std::ptr::null;
 
     #[test]
     fn linked_correctly() {
-        let ptr = null_mut();
-        unsafe {
-            speex_lib_ctl(SPEEX_LIB_GET_VERSION_STRING as c_int, ptr);
-        }
+        let mut char_ptr: *const c_char = null();
+        let ptr = &mut char_ptr as *mut *const c_char;
+        let ptr = ptr as *mut c_void;
+        let c_str = unsafe {
+            speex_lib_ctl(SPEEX_LIB_GET_VERSION_STRING as i32, ptr);
+            CStr::from_ptr(char_ptr)
+        };
+        let version_str = format!("{c_str:?}");
+        assert_eq!(version_str, "\"speex-1.2.1\"".to_string())
     }
 }

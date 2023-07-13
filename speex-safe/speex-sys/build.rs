@@ -28,6 +28,7 @@ fn main() {
         "hexc_10_32_table.c",
         "hexc_table.c",
         "high_lsp_tables.c",
+        "kiss_fft.c",
         "kiss_fftr.c",
         "lpc.c",
         "lsp.c",
@@ -53,9 +54,10 @@ fn main() {
 
     ccomp.include("speex/include");
     println!("cargo:include=speex/include");
-    println!("cargo:rustc-link-lib=speex");
+    println!("cargo:rustc-link-lib=static=speex");
     let link_dir = dst.join("lib").to_str().map(str::to_string).unwrap();
     println!("cargo:rustc-link-search={link_dir}");
+    println!("cargo:static=1");
 
     for path in c_files {
         ccomp.file(format!("speex/libspeex/{path}"));
