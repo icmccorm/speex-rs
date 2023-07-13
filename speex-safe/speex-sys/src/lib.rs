@@ -9,3 +9,18 @@
 #![allow(non_snake_case)]
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::ffi::c_int;
+    use std::ptr::null_mut;
+
+    #[test]
+    fn linked_correctly() {
+        let ptr = null_mut();
+        unsafe {
+            speex_lib_ctl(SPEEX_LIB_GET_VERSION_STRING as c_int, ptr);
+        }
+    }
+}
