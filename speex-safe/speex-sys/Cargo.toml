@@ -4,7 +4,7 @@ authors = [
     "Rob Bailey <actioninja@criticalaction.net>",
     "Xiph.org Foundation",
 ]
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 license = "MPL-2.0 AND BSD-3-Clause"
 description = "Unsafe rust bindings to the speex audio compression library"
