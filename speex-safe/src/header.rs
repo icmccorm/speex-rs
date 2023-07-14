@@ -1,5 +1,4 @@
-use crate::mode::SpeexMode;
-use speex_sys::SpeexHeader as SysHeader;
+use speex_sys::{SpeexHeader as SysHeader, SpeexMode};
 use std::mem::MaybeUninit;
 
 /// ## Why doesn't this implement `Drop`?
@@ -19,7 +18,7 @@ impl SpeexHeader {
             let mut uninit: MaybeUninit<SysHeader> = MaybeUninit::uninit();
             let ptr = uninit.as_mut_ptr();
 
-            let mode_ptr = mode.backing;
+            let mode_ptr = mode as *const SpeexMode;
             speex_sys::speex_init_header(ptr, rate, num_channels, mode_ptr);
 
             let initialized: SysHeader = uninit.assume_init();

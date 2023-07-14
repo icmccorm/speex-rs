@@ -5,14 +5,24 @@ pub(crate) mod stereo_state;
 
 pub use bits::SpeexBits;
 pub use header::SpeexHeader;
-pub use mode::SpeexMode;
+pub use mode::ControlError;
+pub use mode::ModeId;
+pub use mode::NbMode;
+pub use mode::NbSubmodeId;
+pub use mode::SpeexDecoder;
+pub use mode::SpeexEncoder;
+pub use mode::UwbMode;
+pub use mode::UwbSubmodeId;
+pub use mode::WbMode;
+pub use mode::WbSubmodeId;
+pub use stereo_state::SpeexStereoState;
+
 use speex_sys::{
     speex_lib_ctl, SPEEX_LIB_GET_EXTRA_VERSION, SPEEX_LIB_GET_MAJOR_VERSION,
     SPEEX_LIB_GET_MICRO_VERSION, SPEEX_LIB_GET_MINOR_VERSION, SPEEX_LIB_GET_VERSION_STRING,
 };
-use std::ffi::{c_char, c_int, c_void, CStr};
+use std::ffi::{c_char, c_void, CStr};
 use std::ptr::null;
-pub use stereo_state::SpeexStereoState;
 
 pub fn get_major_version() -> i32 {
     let mut major_version = 0;
