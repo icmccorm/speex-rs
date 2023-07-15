@@ -9,6 +9,7 @@ use std::error::Error;
 use std::ffi::c_void;
 use std::fmt::Display;
 
+/// Possible modes for the encoder and decoder.
 #[repr(i32)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum ModeId {
@@ -17,26 +18,70 @@ pub enum ModeId {
     UltraWideBand = SPEEX_MODEID_UWB,
 }
 
+/// Possible submodes for the narrowband mode.
+///
+/// As wideband and ultra-wideband modes both embed narrowband, this is also used for those.
 #[repr(i32)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum NbSubmodeId {
+    /// 2150 bps "vocoder-like" mode for comfort noise
     VocoderLike = 1,
+    /// 3.95 kbps very low bit-rate mode
     ExtremeLow = 8,
+    /// 5.95 kbps very low bit-rate mode
     VeryLow = 2,
+    /// 8 kbps low bit-rate mode
     Low = 3,
+    /// 11 kbps medium bit-rate mode
     Medium = 4,
+    /// 15 kbps high bit-rate mode
     High = 5,
+    /// 18.2 kbps very high bit-rate mode
     VeryHigh = 6,
+    /// 24.6 kbps very high bit-rate mode
     ExtremeHigh = 7,
 }
 
+impl From<i32> for NbSubmodeId {
+    fn from(value: i32) -> Self {
+        match value {
+            1 => NbSubmodeId::VocoderLike,
+            2 => NbSubmodeId::VeryLow,
+            3 => NbSubmodeId::Low,
+            4 => NbSubmodeId::Medium,
+            5 => NbSubmodeId::High,
+            6 => NbSubmodeId::VeryHigh,
+            7 => NbSubmodeId::ExtremeHigh,
+            8 => NbSubmodeId::ExtremeLow,
+            _ => panic!("Invalid submode id"),
+        }
+    }
+}
+
+/// Possible submodes for the Wideband mode.
 #[repr(i32)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum WbSubmodeId {
+    /// disables innovation quantization entirely
     NoQuantize = 1,
-    v2 = 2,
-    v3 = 3,
-    v4 = 4,
+    /// enables innovation quantization, but with a lower rate than the default
+    QuantizedLow = 2,
+    /// enables innovation quantization with the default rate
+    QuantizedMedium = 3,
+    /// enables innovation quantization, but with a higher rate than the default
+    QuantizedHigh = 4,
+}
+
+impl From<i32> for WbSubmodeId {
+    fn from(value: i32) -> Self {
+        match value {
+            1 => WbSubmodeId::NoQuantize,
+            2 => WbSubmodeId::QuantizedLow,
+            3 => WbSubmodeId::QuantizedMedium,
+            4 => WbSubmodeId::QuantizedHigh,
+            _ => panic!("Invalid submode id"),
+        }
+    }
 }
 
 /// Possible submodes for the UWB mode.
@@ -46,6 +91,15 @@ pub enum WbSubmodeId {
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum UwbSubmodeId {
     Only = WbSubmodeId::NoQuantize as i32,
+}
+
+impl From<i32> for UwbSubmodeId {
+    fn from(value: i32) -> Self {
+        match value {
+            1 => UwbSubmodeId::Only,
+            _ => panic!("Invalid submode id"),
+        }
+    }
 }
 
 impl ModeId {
@@ -74,9 +128,14 @@ impl ModeId {
     }
 }
 
+/// Error type for the control functions of the encoder and decoder.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum ControlError {
+    /// The request type passed to the control function was invalid
+    /// The parameter is the request type that was passed
     UnknownRequest(i32),
+    /// The parameter passed to the control function was invalid (and probably caused a segfault,
+    /// making this error unreachable)
     InvalidParameter,
 }
 
