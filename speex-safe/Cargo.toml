@@ -11,6 +11,11 @@ description = "Safe wrapper for speex-sys"
 license = "MPL-2.0 AND BSD-3-Clause"
 categories = ["external-ffi-bindings", "multimedia::audio", "encoding"]
 keywords = ["speex", "libspeex", "vorbis", "compression", "audio"]
+include = [
+    "README.md",
+    "LICENSE.md",
+    "src/",
+]
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
