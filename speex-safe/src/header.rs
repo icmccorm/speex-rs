@@ -1,5 +1,4 @@
 use speex_sys::{SpeexHeader as SysHeader, SpeexMode};
-use std::mem;
 use std::mem::MaybeUninit;
 
 /// Standard speex stream header

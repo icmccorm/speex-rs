@@ -29,7 +29,11 @@ impl SpeexEncoderHandle {
     }
 
     /// Destroy the encoder handle. This MUST be called when you are done with the encoder handle.
-    pub fn destroy(handle: *mut SpeexEncoderHandle) {
+    ///
+    /// # Safety
+    /// This function must *only* be called on a handle that was created with `SpeexEncoderHandle::create`.
+    /// It shouldn't be called on an already destroyed handle.
+    pub unsafe fn destroy(handle: *mut SpeexEncoderHandle) {
         unsafe { speex_sys::speex_encoder_destroy(handle as *mut c_void) }
     }
 }
@@ -86,7 +90,7 @@ impl<T: CoderMode> SpeexEncoder<T> {
     }
 
     /// Sets the analysis complexity of the encoder.
-    fn set_complexity(&mut self, complexity: i32) {
+    pub fn set_complexity(&mut self, complexity: i32) {
         let ptr = &complexity as *const i32 as *mut c_void;
         unsafe {
             self.ctl(speex_sys::SPEEX_SET_COMPLEXITY, ptr).unwrap();
@@ -94,7 +98,7 @@ impl<T: CoderMode> SpeexEncoder<T> {
     }
 
     /// Gets the analysis complexity of the encoder.
-    fn get_complexity(&mut self) -> i32 {
+    pub fn get_complexity(&mut self) -> i32 {
         let mut state = 0;
         let ptr = &mut state as *mut i32 as *mut c_void;
         unsafe {

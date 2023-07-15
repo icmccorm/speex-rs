@@ -7,7 +7,7 @@ use std::mem::MaybeUninit;
 /// Internally packs bits.
 pub struct SpeexBits<'a> {
     // Only present when the speex_bits does not own the buffer
-    buffer_ref: Option<&'a mut [u8]>,
+    pub buffer_ref: Option<&'a mut [u8]>,
     backing: SysBits,
 }
 
