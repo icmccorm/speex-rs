@@ -66,6 +66,7 @@ impl<T: CoderMode> ControlFunctions for SpeexDecoder<T> {
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum DecoderError {
+    TooSmallBuffer,
     EndOfStream,
     CorruptStream,
 }
@@ -73,6 +74,7 @@ pub enum DecoderError {
 impl Display for DecoderError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            DecoderError::TooSmallBuffer => write!(f, "Buffer is too small to decode into"),
             DecoderError::EndOfStream => write!(f, "End of stream reached while decoding"),
             DecoderError::CorruptStream => write!(f, "Corrupt stream was unable to be decoded"),
         }
@@ -100,34 +102,59 @@ impl<T: CoderMode> SpeexDecoder<T> {
     }
 
     /// Decode one frame of speex data from the bitstream
-    pub fn decode(&mut self, bits: &mut SpeexBits) -> Result<f32, DecoderError> {
-        let mut output: f32 = 0.0;
-        let ptr = &mut output as *mut f32 as *mut c_float;
+    pub fn decode(&mut self, bits: &mut SpeexBits, out: &mut [f32]) -> Result<(), DecoderError> {
+        let frame_size = self.get_frame_size() as usize;
+        if out.len() < frame_size {
+            return Err(DecoderError::TooSmallBuffer);
+        }
+        let out_ptr = out.as_mut_ptr();
         let bits_ptr = bits.backing_mut_ptr();
-        let result =
-            unsafe { speex_sys::speex_decode(self.encoder_handle as *mut c_void, bits_ptr, ptr) };
+        let result = unsafe {
+            speex_sys::speex_decode(self.encoder_handle as *mut c_void, bits_ptr, out_ptr)
+        };
         match result {
-            0 => Ok(output),
+            0 => Ok(()),
             -1 => Err(DecoderError::EndOfStream),
             -2 => Err(DecoderError::CorruptStream),
             _ => panic!("Unexpected return value from speex_decode"),
         }
     }
 
+    pub fn decode_to_owned(&mut self, bits: &mut SpeexBits) -> Result<Vec<f32>, DecoderError> {
+        let frame_size = self.get_frame_size() as usize;
+        let mut out = vec![0.0; frame_size];
+        self.decode(bits, &mut out)?;
+        Ok(out)
+    }
+
     /// Decode one frame of speex data from the bitstream, as i16
-    pub fn decode_int(&mut self, bits: &mut SpeexBits) -> Result<i16, DecoderError> {
-        let mut output: i16 = 0;
-        let ptr = &mut output as *mut i16 as *mut i16;
+    pub fn decode_int(
+        &mut self,
+        bits: &mut SpeexBits,
+        out: &mut [i16],
+    ) -> Result<(), DecoderError> {
+        let frame_size = self.get_frame_size() as usize;
+        if out.len() < frame_size {
+            return Err(DecoderError::TooSmallBuffer);
+        }
+        let out_ptr = out.as_mut_ptr();
         let bits_ptr = bits.backing_mut_ptr();
         let result = unsafe {
-            speex_sys::speex_decode_int(self.encoder_handle as *mut c_void, bits_ptr, ptr)
+            speex_sys::speex_decode_int(self.encoder_handle as *mut c_void, bits_ptr, out_ptr)
         };
         match result {
-            0 => Ok(output),
+            0 => Ok(()),
             -1 => Err(DecoderError::EndOfStream),
             -2 => Err(DecoderError::CorruptStream),
             _ => panic!("Unexpected return value from speex_decode"),
         }
+    }
+
+    pub fn decode_int_to_owned(&mut self, bits: &mut SpeexBits) -> Result<Vec<i16>, DecoderError> {
+        let frame_size = self.get_frame_size() as usize;
+        let mut out = vec![0; frame_size];
+        self.decode_int(bits, &mut out)?;
+        Ok(out)
     }
 
     fn get_low_submode_internal(&mut self) -> NbSubmodeId {
