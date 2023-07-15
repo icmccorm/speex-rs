@@ -3,8 +3,17 @@ name = "speex-safe"
 version = "0.1.0"
 edition = "2021"
 repository = "https://github.com/actioninja/speex-rs/tree/master/speex-safe"
+authors = [
+    "Rob Bailey <actioninja@criticalaction.net>",
+    "Xiph.org Foundation",
+]
+description = "Safe wrapper for speex-sys"
+license = "MPL-2.0 AND BSD-3-Clause"
+categories = ["external-ffi-bindings", "multimedia::audio", "encoding"]
+keywords = ["speex", "libspeex", "vorbis", "compression", "audio"]
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-speex-sys = { path = "speex-sys" }
+speex-sys = { version = "0.4.0", path = "speex-sys" }
