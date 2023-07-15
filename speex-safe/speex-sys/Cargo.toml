@@ -10,7 +10,7 @@ license = "MPL-2.0 AND BSD-3-Clause"
 description = "Unsafe rust bindings to the speex audio compression library"
 repository = "https://github.com/actioninja/speex-rs/tree/master/speex-safe/speex-sys"
 categories = ["external-ffi-bindings", "multimedia::audio", "encoding"]
-keywords = ["speex", "libspeex", "vorbis", "compression"]
+keywords = ["speex", "libspeex", "vorbis", "compression", "audio"]
 links = "speex"
 include = [
     "/build.rs",
