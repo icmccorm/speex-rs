@@ -115,28 +115,23 @@ impl<T: CoderMode> SpeexEncoder<T> {
     }
 
     /// Encode one frame of audio into the given bits.
-    pub fn encode(&mut self, input: f32, bits: &mut SpeexBits) {
-        let mut input = input;
-        let input = &mut input as *mut f32;
+    pub fn encode(&mut self, input: &mut [f32], bits: &mut SpeexBits) {
+        let input_ptr = input.as_mut_ptr();
         unsafe {
             speex_sys::speex_encode(
                 self.encoder_handle as *mut c_void,
-                input,
+                input_ptr,
                 bits.backing_mut_ptr(),
             );
         }
     }
 
     /// Encode one frame of audio into the given bits, using an integer representation.
-    pub fn encode_int(&mut self, input: i16, bits: &mut SpeexBits) {
-        let mut input = input;
-        let input = &mut input as *mut i16;
+    pub fn encode_int(&mut self, input: &mut [i16], bits: &mut SpeexBits) {
+        let bits_ptr = bits.backing_mut_ptr();
+        let input_ptr = input.as_mut_ptr();
         unsafe {
-            speex_sys::speex_encode_int(
-                self.encoder_handle as *mut c_void,
-                input,
-                bits.backing_mut_ptr(),
-            );
+            speex_sys::speex_encode_int(self.encoder_handle as *mut c_void, input_ptr, bits_ptr);
         }
     }
 }
@@ -243,5 +238,69 @@ impl<T: CoderMode> Drop for SpeexEncoder<T> {
         unsafe {
             SpeexEncoderHandle::destroy(self.encoder_handle);
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    macro_rules! set_get_test {
+        ($name:ident, $set:ident, $get:ident, $value:expr) => {
+            #[test]
+            fn $name() {
+                let mut encoder = SpeexEncoder::<WbMode>::new();
+                encoder.$set($value);
+                let result = encoder.$get();
+
+                assert_eq!(result, $value);
+            }
+        };
+    }
+
+    set_get_test!(
+        set_get_high_submode,
+        set_high_submode,
+        get_high_submode,
+        WbSubmodeId::NoQuantize
+    );
+
+    set_get_test!(set_get_vbr, set_vbr, get_vbr, true);
+
+    set_get_test!(set_get_vbr_quality, set_vbr_quality, get_vbr_quality, 8.0);
+
+    set_get_test!(set_get_vad, set_vad, get_vad, true);
+
+    set_get_test!(set_get_abr, set_abr, get_abr, 2000);
+
+    #[test]
+    fn set_quality() {
+        let mut encoder = SpeexEncoder::<WbMode>::new();
+        encoder.set_quality(10);
+    }
+
+    set_get_test!(set_get_bitrate, set_bitrate, get_bitrate, 3950);
+
+    set_get_test!(
+        set_get_sampling_rate,
+        set_sampling_rate,
+        get_sampling_rate,
+        3950
+    );
+
+    #[test]
+    fn get_frame_size() {
+        let mut encoder = SpeexEncoder::<WbMode>::new();
+        encoder.get_frame_size();
+    }
+
+    #[test]
+    fn encodes_frame_without_segfault() {
+        let mut encoder = SpeexEncoder::<NbMode>::new();
+        let mut bits = SpeexBits::new();
+        let frame_size = encoder.get_frame_size();
+        let mut input = vec![23i16; frame_size as usize];
+
+        encoder.encode_int(&mut input, &mut bits);
     }
 }

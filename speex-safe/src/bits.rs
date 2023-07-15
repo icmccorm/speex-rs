@@ -197,6 +197,26 @@ mod test {
     fn creates_and_drops() {
         {
             let mut bits = SpeexBits::new();
+            let num_bytes = bits.num_bytes();
+            assert_eq!(num_bytes, 0);
         }
+    }
+
+    #[test]
+    fn encodes_value() {
+        let mut bits = SpeexBits::new();
+        bits.pack(1, 1);
+        let num_bytes = bits.num_bytes();
+        assert_eq!(num_bytes, 1);
+    }
+
+    #[test]
+    fn write_arbitrary_bytes() {
+        let mut bits = SpeexBits::new();
+        let mut buffer = [12u8; 4];
+        bits.write(&mut buffer);
+        bits.rewind();
+        let num_bytes = bits.num_bytes();
+        assert_eq!(num_bytes, 4);
     }
 }
