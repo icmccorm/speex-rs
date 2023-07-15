@@ -1,5 +1,5 @@
 use crate::mode::{CoderMode, ControlError, ControlFunctions, ModeId, NbMode, UwbMode, WbMode};
-use crate::{mode, NbSubmodeId, WbSubmodeId};
+use crate::{mode, NbSubmodeId, SpeexBits, WbSubmodeId};
 use speex_sys::SpeexMode;
 use std::ffi::c_void;
 use std::marker::{PhantomData, PhantomPinned};
@@ -101,6 +101,32 @@ impl<T: CoderMode> SpeexEncoder<T> {
             self.ctl(speex_sys::SPEEX_GET_COMPLEXITY, ptr).unwrap();
         }
         state
+    }
+
+    /// Encode one frame of audio into the given bits.
+    pub fn encode(&mut self, input: f32, bits: &mut SpeexBits) {
+        let mut input = input;
+        let input = &mut input as *mut f32;
+        unsafe {
+            speex_sys::speex_encode(
+                self.encoder_handle as *mut c_void,
+                input,
+                bits.backing_mut_ptr(),
+            );
+        }
+    }
+
+    /// Encode one frame of audio into the given bits, using an integer representation.
+    pub fn encode_int(&mut self, input: i16, bits: &mut SpeexBits) {
+        let mut input = input;
+        let input = &mut input as *mut i16;
+        unsafe {
+            speex_sys::speex_encode_int(
+                self.encoder_handle as *mut c_void,
+                input,
+                bits.backing_mut_ptr(),
+            );
+        }
     }
 }
 
