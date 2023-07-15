@@ -2,6 +2,9 @@ use speex_sys::SpeexBits as SysBits;
 use std::ffi::{c_char, c_void};
 use std::mem::MaybeUninit;
 
+/// A struct that holds bits to be read or written to
+///
+/// Internally packs bits.
 pub struct SpeexBits<'a> {
     // Only present when the speex_bits does not own the buffer
     buffer_ref: Option<&'a mut [u8]>,
@@ -9,10 +12,11 @@ pub struct SpeexBits<'a> {
 }
 
 impl<'a> SpeexBits<'a> {
-    fn backing_mut_ptr(&mut self) -> *mut SysBits {
+    pub(crate) fn backing_mut_ptr(&mut self) -> *mut SysBits {
         &mut self.backing as *mut SysBits
     }
 
+    /// Creates a new SpeexBits
     pub fn new() -> Self {
         let backing = unsafe {
             let mut uninit: MaybeUninit<SysBits> = MaybeUninit::uninit();
@@ -43,6 +47,7 @@ impl<'a> SpeexBits<'a> {
          */
     }
 
+    /// Creates a new SpeexBits with an existing buffer
     pub fn new_with_buffer(buffer: &'a mut [u8]) -> Self {
         let backing = unsafe {
             let mut uninit: MaybeUninit<SysBits> = MaybeUninit::uninit();
@@ -63,35 +68,43 @@ impl<'a> SpeexBits<'a> {
         }
     }
 
+    /// Advances the read pointer by `n` bits
     pub fn advance(&mut self, n: i32) {
         let ptr = self.backing_mut_ptr();
         unsafe { speex_sys::speex_bits_advance(ptr, n) };
     }
 
+    /// Inserts a terminator so the data can be sent as a packet while autodetecting how many
+    /// frames were in the packet
     pub fn insert_terminator(&mut self) {
         unsafe {
             speex_sys::speex_bits_insert_terminator(self.backing_mut_ptr());
         }
     }
 
+    /// Returns the number of bytes in the bitstream, including the last partial byte
     pub fn num_bytes(&mut self) -> i32 {
         unsafe { speex_sys::speex_bits_nbytes(self.backing_mut_ptr()) }
     }
 
+    /// Appends bits to the bitstream
     pub fn pack(&mut self, data: i32, num_bits: i32) {
         unsafe {
             speex_sys::speex_bits_pack(self.backing_mut_ptr(), data, num_bits);
         }
     }
 
+    ///Gets the value of the next bit in the stream without advancing the read pointer
     pub fn peek(&mut self) -> i32 {
         unsafe { speex_sys::speex_bits_peek(self.backing_mut_ptr()) }
     }
 
+    /// Gets the value of the next `num_bits` in the stream without advancing the read pointer
     pub fn peek_unsigned(&mut self, num_bits: i32) -> u32 {
         unsafe { speex_sys::speex_bits_peek_unsigned(self.backing_mut_ptr(), num_bits) }
     }
 
+    /// Appends bytes to the bitstream
     pub fn read_whole_bytes(&mut self, bytes: &[u8]) {
         unsafe {
             let ptr = bytes.as_ptr() as *const c_char;
@@ -99,22 +112,26 @@ impl<'a> SpeexBits<'a> {
         }
     }
 
-    pub fn remaining(&mut self) -> i32 {
-        unsafe { speex_sys::speex_bits_remaining(self.backing_mut_ptr()) }
+    /// Returns the number of bits remaining to be read from a stream
+    pub fn remaining(&mut self) -> u32 {
+        unsafe { speex_sys::speex_bits_remaining(self.backing_mut_ptr()) as u32 }
     }
 
+    /// Resets SpeexBits to the initial state, erasing all content
     pub fn reset(&mut self) {
         unsafe {
             speex_sys::speex_bits_reset(self.backing_mut_ptr());
         }
     }
 
+    /// Resets the read pointer to the beginning, without erasing the content
     pub fn rewind(&mut self) {
         unsafe {
             speex_sys::speex_bits_rewind(self.backing_mut_ptr());
         }
     }
 
+    /// Sets an existing SpeexBits to use data from an existing buffer
     pub fn set_bit_buffer(&mut self, buffer: &mut [u8]) {
         unsafe {
             let ptr = buffer.as_mut_ptr() as *mut c_void;
@@ -122,20 +139,25 @@ impl<'a> SpeexBits<'a> {
         }
     }
 
+    /// Interpret the next number of bits as a signed integer, advancing the read pointer
     pub fn unpack_signed(&mut self, num_bits: i32) -> i32 {
         unsafe { speex_sys::speex_bits_unpack_signed(self.backing_mut_ptr(), num_bits) }
     }
 
+    /// Interpret the next number of bits as an unsigned integer, advancing the read pointer
     pub fn unpacked_unsigned(&mut self, num_bits: i32) -> u32 {
         unsafe { speex_sys::speex_bits_unpack_unsigned(self.backing_mut_ptr(), num_bits) }
     }
 
+    /// Writes the content of the bitstream to a buffer
     pub fn write(&mut self, buffer: &mut [u8]) -> u32 {
         let buf_ptr = buffer.as_mut_ptr() as *mut i8;
         let len = buffer.len() as i32;
         unsafe { speex_sys::speex_bits_write(self.backing_mut_ptr(), buf_ptr, len) as u32 }
     }
 
+    /// Writes the content of the bitstream to a buffer, writing whole bytes only. Removes any
+    /// bytes that are successfully written from the bitstream.
     pub fn write_whole_bytes(&mut self, buffer: &mut [u8]) -> u32 {
         let buf_ptr = buffer.as_mut_ptr() as *mut i8;
         let len = buffer.len() as i32;

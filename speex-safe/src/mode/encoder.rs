@@ -1,5 +1,5 @@
 use crate::mode::{CoderMode, ControlError, ControlFunctions, ModeId, NbMode, UwbMode, WbMode};
-use crate::{NbSubmodeId, WbSubmodeId};
+use crate::{mode, NbSubmodeId, WbSubmodeId};
 use speex_sys::SpeexMode;
 use std::ffi::c_void;
 use std::marker::{PhantomData, PhantomPinned};
@@ -34,13 +34,14 @@ impl SpeexEncoderHandle {
     }
 }
 
-/// The encoder struct, this is a safe wrapper around the unsafe `SpeexEncoderHandle`.
-///
+/// A struct representing a speex encoder.
 pub struct SpeexEncoder<T: CoderMode> {
     encoder_handle: *mut SpeexEncoderHandle,
-    mode: &'static SpeexMode,
+    pub mode: &'static SpeexMode,
     _phantom: PhantomData<T>,
 }
+
+impl<T: CoderMode> mode::private::Sealed for SpeexEncoder<T> {}
 
 impl<T: CoderMode> ControlFunctions for SpeexEncoder<T> {
     unsafe fn ctl(&mut self, request: i32, ptr: *mut c_void) -> Result<(), ControlError> {
@@ -83,6 +84,24 @@ impl<T: CoderMode> SpeexEncoder<T> {
         }
         high_mode.into()
     }
+
+    /// Sets the analysis complexity of the encoder.
+    fn set_complexity(&mut self, complexity: i32) {
+        let ptr = &complexity as *const i32 as *mut c_void;
+        unsafe {
+            self.ctl(speex_sys::SPEEX_SET_COMPLEXITY, ptr).unwrap();
+        }
+    }
+
+    /// Gets the analysis complexity of the encoder.
+    fn get_complexity(&mut self) -> i32 {
+        let mut state = 0;
+        let ptr = &mut state as *mut i32 as *mut c_void;
+        unsafe {
+            self.ctl(speex_sys::SPEEX_GET_COMPLEXITY, ptr).unwrap();
+        }
+        state
+    }
 }
 
 impl SpeexEncoder<NbMode> {
@@ -115,6 +134,7 @@ impl Default for SpeexEncoder<NbMode> {
 }
 
 impl SpeexEncoder<WbMode> {
+    /// Create a new wideband encoder.
     pub fn new() -> SpeexEncoder<WbMode> {
         let mode = ModeId::WideBand.get_mode();
         let encoder_handle = unsafe { SpeexEncoderHandle::create(mode) };
@@ -125,18 +145,22 @@ impl SpeexEncoder<WbMode> {
         }
     }
 
+    /// Sets the submode of the narrowband part of the encoder.
     pub fn set_low_submode(&mut self, low_mode: NbSubmodeId) {
         self.set_low_submode_internal(low_mode);
     }
 
+    /// Gets the submode of the narrowband part of the encoder.
     pub fn get_low_submode(&mut self) -> NbSubmodeId {
         self.get_low_submode_internal()
     }
 
+    /// Sets the submode of the wideband part of the encoder.
     pub fn set_high_submode(&mut self, high_mode: WbSubmodeId) {
         self.set_high_submode_internal(high_mode);
     }
 
+    /// Gets the submode of the wideband part of the encoder.
     pub fn get_high_submode(&mut self) -> WbSubmodeId {
         self.get_high_submode_internal()
     }
@@ -149,6 +173,7 @@ impl Default for SpeexEncoder<WbMode> {
 }
 
 impl SpeexEncoder<UwbMode> {
+    /// Create a new ultra-wideband encoder.
     pub fn new() -> SpeexEncoder<UwbMode> {
         let mode = ModeId::UltraWideBand.get_mode();
         let encoder_handle = unsafe { SpeexEncoderHandle::create(mode) };
@@ -159,10 +184,12 @@ impl SpeexEncoder<UwbMode> {
         }
     }
 
+    /// Sets the submode of the narrowband part of the encoder.
     pub fn set_low_submode(&mut self, low_mode: NbSubmodeId) {
         self.set_low_submode_internal(low_mode);
     }
 
+    /// Gets the submode of the narrowband part of the encoder.
     pub fn get_low_submode(&mut self) -> NbSubmodeId {
         self.get_low_submode_internal()
     }

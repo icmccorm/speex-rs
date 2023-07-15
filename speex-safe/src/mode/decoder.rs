@@ -1,9 +1,12 @@
 use crate::mode::{CoderMode, ControlFunctions, ModeId};
-use crate::{ControlError, NbMode, NbSubmodeId, UwbMode, WbMode, WbSubmodeId};
+use crate::{mode, ControlError, NbMode, NbSubmodeId, SpeexBits, UwbMode, WbMode, WbSubmodeId};
 use speex_sys::SpeexMode;
-use std::ffi::c_void;
+use std::ffi::{c_float, c_void};
+use std::fmt::{Display, Formatter};
 use std::marker::{PhantomData, PhantomPinned};
 
+/// Handle for the encoder, speex represents this as an opaque pointer so this is an unconstructable
+/// type that is always intended to be behind a pointer.
 #[repr(C)]
 pub struct SpeexDecoderHandle {
     _data: [u8; 0],
@@ -11,6 +14,12 @@ pub struct SpeexDecoderHandle {
 }
 
 impl SpeexDecoderHandle {
+    /// Create a new decoder handle for the given mode.
+    ///
+    /// # Safety
+    ///
+    /// This allocates, so you *must* call SpeexDecoderHandle::destroy with the handle when created
+    /// once you are done with the handle.
     pub unsafe fn create(mode: &SpeexMode) -> *mut Self {
         let ptr = unsafe {
             let mode_ptr = mode as *const SpeexMode;
@@ -32,11 +41,14 @@ impl SpeexDecoderHandle {
     }
 }
 
+/// A struct representing a speex decoder.
 pub struct SpeexDecoder<T: CoderMode> {
     encoder_handle: *mut SpeexDecoderHandle,
-    mode: &'static SpeexMode,
+    pub mode: &'static SpeexMode,
     _phantom: PhantomData<T>,
 }
+
+impl<T: CoderMode> mode::private::Sealed for SpeexDecoder<T> {}
 
 impl<T: CoderMode> ControlFunctions for SpeexDecoder<T> {
     unsafe fn ctl(&mut self, request: i32, ptr: *mut c_void) -> Result<(), ControlError> {
@@ -45,8 +57,23 @@ impl<T: CoderMode> ControlFunctions for SpeexDecoder<T> {
     }
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub enum DecoderError {
+    EndOfStream,
+    CorruptStream,
+}
+
+impl Display for DecoderError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DecoderError::EndOfStream => write!(f, "End of stream reached while decoding"),
+            DecoderError::CorruptStream => write!(f, "Corrupt stream was unable to be decoded"),
+        }
+    }
+}
+
 impl<T: CoderMode> SpeexDecoder<T> {
-    /// Set whether to use
+    /// Set whether to use enhancement.
     pub fn set_enhancement(&mut self, state: bool) {
         let state = state as i32;
         let ptr = &state as *const i32 as *mut c_void;
@@ -55,6 +82,7 @@ impl<T: CoderMode> SpeexDecoder<T> {
         }
     }
 
+    /// Get whether enhancement is turned on or not.
     pub fn get_enhancement(&mut self) -> bool {
         let mut state = 0;
         let ptr = &mut state as *mut i32 as *mut c_void;
@@ -62,6 +90,37 @@ impl<T: CoderMode> SpeexDecoder<T> {
             self.ctl(speex_sys::SPEEX_GET_ENH, ptr).unwrap();
         }
         state != 0
+    }
+
+    /// Decode one frame of speex data from the bitstream
+    pub fn decode(&mut self, bits: &mut SpeexBits) -> Result<f32, DecoderError> {
+        let mut output: f32 = 0.0;
+        let ptr = &mut output as *mut f32 as *mut c_float;
+        let bits_ptr = bits.backing_mut_ptr();
+        let result =
+            unsafe { speex_sys::speex_decode(self.encoder_handle as *mut c_void, bits_ptr, ptr) };
+        match result {
+            0 => Ok(output),
+            -1 => Err(DecoderError::EndOfStream),
+            -2 => Err(DecoderError::CorruptStream),
+            _ => panic!("Unexpected return value from speex_decode"),
+        }
+    }
+
+    /// Decode one frame of speex data from the bitstream, as i16
+    pub fn decode_int(&mut self, bits: &mut SpeexBits) -> Result<i16, DecoderError> {
+        let mut output: i16 = 0;
+        let ptr = &mut output as *mut i16 as *mut i16;
+        let bits_ptr = bits.backing_mut_ptr();
+        let result = unsafe {
+            speex_sys::speex_decode_int(self.encoder_handle as *mut c_void, bits_ptr, ptr)
+        };
+        match result {
+            0 => Ok(output),
+            -1 => Err(DecoderError::EndOfStream),
+            -2 => Err(DecoderError::CorruptStream),
+            _ => panic!("Unexpected return value from speex_decode"),
+        }
     }
 
     fn get_low_submode_internal(&mut self) -> NbSubmodeId {
@@ -129,6 +188,7 @@ impl Default for SpeexDecoder<NbMode> {
 }
 
 impl SpeexDecoder<WbMode> {
+    /// Create a new WideBand encoder.
     pub fn new() -> SpeexDecoder<WbMode> {
         let mode = ModeId::WideBand.get_mode();
         let encoder_handle = unsafe { SpeexDecoderHandle::create(mode) };
@@ -139,18 +199,22 @@ impl SpeexDecoder<WbMode> {
         }
     }
 
+    /// Sets the submode of the narrowband part of the encoder.
     pub fn set_low_submode(&mut self, low_mode: NbSubmodeId) {
         self.set_low_submode_internal(low_mode);
     }
 
+    /// Gets the submode of the narrowband part of the encoder.
     pub fn get_low_submode(&mut self) -> NbSubmodeId {
         self.get_low_submode_internal()
     }
 
+    /// Sets the submode of the wideband part of the encoder.
     pub fn set_high_submode(&mut self, high_mode: WbSubmodeId) {
         self.set_high_submode_internal(high_mode);
     }
 
+    /// Gets the submode of the wideband part of the encoder.
     pub fn get_high_submode(&mut self) -> WbSubmodeId {
         self.get_high_submode_internal()
     }
@@ -163,6 +227,7 @@ impl Default for SpeexDecoder<WbMode> {
 }
 
 impl SpeexDecoder<UwbMode> {
+    /// Create a new Ultra WideBand encoder.
     pub fn new() -> SpeexDecoder<UwbMode> {
         let mode = ModeId::UltraWideBand.get_mode();
         let encoder_handle = unsafe { SpeexDecoderHandle::create(mode) };
@@ -173,10 +238,12 @@ impl SpeexDecoder<UwbMode> {
         }
     }
 
+    /// Sets the submode of the narrowband part of the encoder.
     pub fn set_low_submode(&mut self, low_mode: NbSubmodeId) {
         self.set_low_submode_internal(low_mode);
     }
 
+    /// Gets the submode of the narrowband part of the encoder.
     pub fn get_low_submode(&mut self) -> NbSubmodeId {
         self.get_low_submode_internal()
     }

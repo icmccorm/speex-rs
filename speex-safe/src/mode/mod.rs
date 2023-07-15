@@ -155,6 +155,10 @@ impl Display for ControlError {
 
 impl Error for ControlError {}
 
+mod private {
+    pub trait Sealed {}
+}
+
 /// Trait for the control functions of the encoder and decoder
 ///
 /// This trait is implemented for both the encoder and decoder, and provides a common interface
@@ -162,7 +166,9 @@ impl Error for ControlError {}
 ///
 /// `ctl` is the only function that needs to be implemented, and is used to call the control
 /// functions of the underlying speex library.
-trait ControlFunctions {
+///
+/// This trait is sealed, and cannot be implemented outside of this crate.
+pub trait ControlFunctions: private::Sealed {
     /// Internal function used to convert the error codes returned by the control function into
     /// a result type
     fn check_error(err_code: i32, param: Option<i32>) -> Result<(), ControlError> {
@@ -175,6 +181,12 @@ trait ControlFunctions {
     }
 
     /// Calls a control function of the underlying speex library
+    ///
+    /// # Safety
+    ///
+    /// Implementations of this function call the control functions of the underlying speex library,
+    /// and as such are unsafe. The caller must ensure that the parameters passed to this function
+    /// are valid.
     unsafe fn ctl(&mut self, request: i32, ptr: *mut c_void) -> Result<(), ControlError>;
 
     /// Gets the frame size (in samples) of the encoder/decoder
@@ -187,6 +199,7 @@ trait ControlFunctions {
         state
     }
 
+    /// Sets whether Variable BitRate is enabled or not
     fn set_vbr(&mut self, vbr: bool) {
         let state = if vbr { 1 } else { 0 };
         let ptr = &state as *const i32 as *mut c_void;
@@ -195,6 +208,7 @@ trait ControlFunctions {
         }
     }
 
+    /// Gets whether Variable BitRate is enabled or not
     fn get_vbr(&mut self) -> bool {
         let mut state = 0;
         let ptr = &mut state as *mut i32 as *mut c_void;
@@ -204,6 +218,9 @@ trait ControlFunctions {
         state != 0
     }
 
+    /// Sets the VBR quality of the encoder/decoder
+    ///
+    /// The value should be between 0 and 10, with 10 being the highest quality.
     fn set_vbr_quality(&mut self, quality: f32) {
         let ptr = &quality as *const f32 as *mut c_void;
         unsafe {
@@ -211,6 +228,7 @@ trait ControlFunctions {
         }
     }
 
+    /// Gets the VBR quality of the encoder/decoder
     fn get_vbr_quality(&mut self) -> f32 {
         let mut state = 0.0;
         let ptr = &mut state as *mut f32 as *mut c_void;
@@ -220,6 +238,7 @@ trait ControlFunctions {
         state
     }
 
+    /// Sets whether Voice Activity Detection is enabled or not
     fn set_vad(&mut self, vad: bool) {
         let state = if vad { 1 } else { 0 };
         let ptr = &state as *const i32 as *mut c_void;
@@ -228,6 +247,7 @@ trait ControlFunctions {
         }
     }
 
+    /// Gets whether Voice Activity Detection is enabled or not
     fn get_vad(&mut self) -> bool {
         let mut state = 0;
         let ptr = &mut state as *mut i32 as *mut c_void;
@@ -237,23 +257,27 @@ trait ControlFunctions {
         state != 0
     }
 
-    fn set_abr(&mut self, abr: bool) {
-        let state = if abr { 1 } else { 0 };
-        let ptr = &state as *const i32 as *mut c_void;
+    /// Sets the Average BitRate of the encoder/decoder
+    fn set_abr(&mut self, abr: i32) {
+        let ptr = &abr as *const i32 as *mut c_void;
         unsafe {
             self.ctl(speex_sys::SPEEX_SET_ABR, ptr).unwrap();
         }
     }
 
-    fn get_abr(&mut self) -> bool {
+    /// Gets the Average BitRate of the encoder/decoder
+    fn get_abr(&mut self) -> i32 {
         let mut state = 0;
         let ptr = &mut state as *mut i32 as *mut c_void;
         unsafe {
             self.ctl(speex_sys::SPEEX_GET_ABR, ptr).unwrap();
         }
-        state != 0
+        state
     }
 
+    /// Sets the overall quality of the encoder/decoder
+    /// The value should be between 0 and 10, with 10 being the highest quality.
+    /// Default is 8.
     fn set_quality(&mut self, quality: i32) {
         let ptr = &quality as *const i32 as *mut c_void;
         unsafe {
@@ -261,22 +285,7 @@ trait ControlFunctions {
         }
     }
 
-    fn set_complexity(&mut self, complexity: i32) {
-        let ptr = &complexity as *const i32 as *mut c_void;
-        unsafe {
-            self.ctl(speex_sys::SPEEX_SET_COMPLEXITY, ptr).unwrap();
-        }
-    }
-
-    fn get_complexity(&mut self) -> i32 {
-        let mut state = 0;
-        let ptr = &mut state as *mut i32 as *mut c_void;
-        unsafe {
-            self.ctl(speex_sys::SPEEX_GET_COMPLEXITY, ptr).unwrap();
-        }
-        state
-    }
-
+    /// Sets the current bitrate of the encoder/decoder
     fn set_bitrate(&mut self, bitrate: i32) {
         let ptr = &bitrate as *const i32 as *mut c_void;
         unsafe {
@@ -284,6 +293,7 @@ trait ControlFunctions {
         }
     }
 
+    /// Gets the current bitrate of the encoder/decoder
     fn get_bitrate(&mut self) -> i32 {
         let mut state = 0;
         let ptr = &mut state as *mut i32 as *mut c_void;
@@ -293,14 +303,16 @@ trait ControlFunctions {
         state
     }
 
-    fn set_samplingrate(&mut self, samplingrate: i32) {
+    /// Sets the sampling rate used for bitrate computation
+    fn set_sampling_rate(&mut self, samplingrate: i32) {
         let ptr = &samplingrate as *const i32 as *mut c_void;
         unsafe {
             self.ctl(speex_sys::SPEEX_SET_SAMPLING_RATE, ptr).unwrap();
         }
     }
 
-    fn get_samplingrate(&mut self) -> i32 {
+    /// Gets the sampling rate used for bitrate computation
+    fn get_sampling_rate(&mut self) -> i32 {
         let mut state = 0;
         let ptr = &mut state as *mut i32 as *mut c_void;
         unsafe {
@@ -309,6 +321,7 @@ trait ControlFunctions {
         state
     }
 
+    /// resets the encoder/decoder memories to zero
     fn reset_state(&mut self) {
         unsafe {
             self.ctl(speex_sys::SPEEX_RESET_STATE, std::ptr::null_mut())
@@ -316,24 +329,33 @@ trait ControlFunctions {
         }
     }
 
-    fn set_submode_encoding(&mut self, submode: i32) {
-        let ptr = &submode as *const i32 as *mut c_void;
+    /// Sets whether submode encoding is done in each frame
+    ///
+    /// Note that false breaks the specification for the format
+    fn set_submode_encoding(&mut self, submode: bool) {
+        let state = if submode { 1 } else { 0 };
+        let ptr = &state as *const i32 as *mut c_void;
         unsafe {
             self.ctl(speex_sys::SPEEX_SET_SUBMODE_ENCODING, ptr)
                 .unwrap();
         }
     }
 
-    fn get_submode_encoding(&mut self) -> i32 {
+    /// Gets whether submode encoding is enabled or not
+    fn get_submode_encoding(&mut self) -> bool {
         let mut state = 0;
         let ptr = &mut state as *mut i32 as *mut c_void;
         unsafe {
             self.ctl(speex_sys::SPEEX_GET_SUBMODE_ENCODING, ptr)
                 .unwrap();
         }
-        state
+        state != 0
     }
 
+    /// Gets the lookahead value currently in use by the encoder/decoder
+    ///
+    /// Sum the lookahead of a Speex decoder and the lookahead of a Speex encoder to get the total
+    /// lookahead.
     fn get_lookahead(&mut self) -> i32 {
         let mut state = 0;
         let ptr = &mut state as *mut i32 as *mut c_void;
@@ -343,6 +365,7 @@ trait ControlFunctions {
         state
     }
 
+    /// Sets tuning for Packet-Loss Concealment (expected loss rate)
     fn set_plc_tuning(&mut self, tuning: i32) {
         let ptr = &tuning as *const i32 as *mut c_void;
         unsafe {
@@ -350,6 +373,7 @@ trait ControlFunctions {
         }
     }
 
+    /// Gets current Packet-Loss Concealment tuning value
     fn get_plc_tuning(&mut self) -> i32 {
         let mut state = 0;
         let ptr = &mut state as *mut i32 as *mut c_void;
@@ -359,6 +383,7 @@ trait ControlFunctions {
         state
     }
 
+    /// Sets the max bit-rate allowed in VBR mode
     fn set_vbr_max_bitrate(&mut self, max_bitrate: i32) {
         let ptr = &max_bitrate as *const i32 as *mut c_void;
         unsafe {
@@ -366,6 +391,7 @@ trait ControlFunctions {
         }
     }
 
+    /// Gets the max bit-rate allowed in VBR mode
     fn get_vbr_max_bitrate(&mut self) -> i32 {
         let mut state = 0;
         let ptr = &mut state as *mut i32 as *mut c_void;
@@ -375,6 +401,7 @@ trait ControlFunctions {
         state
     }
 
+    /// Enables or disables highpass filtering of the input/output
     fn set_highpass(&mut self, highpass: bool) {
         let state = if highpass { 1 } else { 0 };
         let ptr = &state as *const i32 as *mut c_void;
@@ -383,6 +410,7 @@ trait ControlFunctions {
         }
     }
 
+    /// Gets whether highpass filtering of the input/output is enabled
     fn get_highpass(&mut self) -> bool {
         let mut state = 0;
         let ptr = &mut state as *mut i32 as *mut c_void;
@@ -393,11 +421,21 @@ trait ControlFunctions {
     }
 }
 
+/// Marker trait used to specify the mode of the de/encoder.
 pub trait CoderMode {}
 
+/// Narrowband mode (8kHz)
+///
+/// This is a marker type used to specify the mode of the de/encoder.
 pub enum NbMode {}
 impl CoderMode for NbMode {}
+/// Wideband mode (16kHz)
+///
+/// This is a marker type used to specify the mode of the de/encoder.
 pub enum WbMode {}
 impl CoderMode for WbMode {}
+/// Ultra-wideband mode (32kHz)
+///
+/// This is a marker type used to specify the mode of the de/encoder.
 pub enum UwbMode {}
 impl CoderMode for UwbMode {}

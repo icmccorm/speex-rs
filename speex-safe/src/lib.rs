@@ -6,6 +6,7 @@ pub(crate) mod stereo_state;
 pub use bits::SpeexBits;
 pub use header::SpeexHeader;
 pub use mode::ControlError;
+pub use mode::ControlFunctions;
 pub use mode::ModeId;
 pub use mode::NbMode;
 pub use mode::NbSubmodeId;
