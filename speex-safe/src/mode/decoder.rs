@@ -120,6 +120,7 @@ impl<T: CoderMode> SpeexDecoder<T> {
         }
     }
 
+    /// Decode one frame of speex data from the bitstream into a new Vec<f32>
     pub fn decode_to_owned(&mut self, bits: &mut SpeexBits) -> Result<Vec<f32>, DecoderError> {
         let frame_size = self.get_frame_size() as usize;
         let mut out = vec![0.0; frame_size];
@@ -150,6 +151,7 @@ impl<T: CoderMode> SpeexDecoder<T> {
         }
     }
 
+    /// Decode one frame of speex data from the bitstream into a new Vec<i16>
     pub fn decode_int_to_owned(&mut self, bits: &mut SpeexBits) -> Result<Vec<i16>, DecoderError> {
         let frame_size = self.get_frame_size() as usize;
         let mut out = vec![0; frame_size];
