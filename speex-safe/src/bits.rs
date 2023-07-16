@@ -5,9 +5,12 @@
 // obtain one at http://mozilla.org/MPL/2.0/.                                  /
 ////////////////////////////////////////////////////////////////////////////////
 
+use std::{
+    ffi::{c_char, c_void},
+    mem::MaybeUninit,
+};
+
 use speex_sys::SpeexBits as SysBits;
-use std::ffi::{c_char, c_void};
-use std::mem::MaybeUninit;
 
 /// A struct that holds bits to be read or written to
 ///
@@ -19,9 +22,7 @@ pub struct SpeexBits<'a> {
 }
 
 impl<'a> SpeexBits<'a> {
-    pub(crate) fn backing_mut_ptr(&mut self) -> *mut SysBits {
-        &mut self.backing as *mut SysBits
-    }
+    pub(crate) fn backing_mut_ptr(&mut self) -> *mut SysBits { &mut self.backing as *mut SysBits }
 
     /// Creates a new SpeexBits
     pub fn new() -> Self {
@@ -43,15 +44,13 @@ impl<'a> SpeexBits<'a> {
 
     pub fn buffer<'b>(&mut self) -> &'a mut [u8] {
         todo!("")
-        /*
-        if let Some(buffer_ref) = &mut self.buffer_ref {
-            *buffer_ref
-        } else {
-            let ptr = self.backing.chars as *mut u8;
-            let len = 0;
-            unsafe { from_raw_parts_mut(ptr, len) }
-        }
-         */
+        // if let Some(buffer_ref) = &mut self.buffer_ref {
+        // buffer_ref
+        // } else {
+        // let ptr = self.backing.chars as *mut u8;
+        // let len = 0;
+        // unsafe { from_raw_parts_mut(ptr, len) }
+        // }
     }
 
     /// Creates a new SpeexBits with an existing buffer
@@ -81,15 +80,16 @@ impl<'a> SpeexBits<'a> {
         unsafe { speex_sys::speex_bits_advance(ptr, n) };
     }
 
-    /// Inserts a terminator so the data can be sent as a packet while autodetecting how many
-    /// frames were in the packet
+    /// Inserts a terminator so the data can be sent as a packet while
+    /// autodetecting how many frames were in the packet
     pub fn insert_terminator(&mut self) {
         unsafe {
             speex_sys::speex_bits_insert_terminator(self.backing_mut_ptr());
         }
     }
 
-    /// Returns the number of bytes in the bitstream, including the last partial byte
+    /// Returns the number of bytes in the bitstream, including the last partial
+    /// byte
     pub fn num_bytes(&mut self) -> i32 {
         unsafe { speex_sys::speex_bits_nbytes(self.backing_mut_ptr()) }
     }
@@ -101,12 +101,12 @@ impl<'a> SpeexBits<'a> {
         }
     }
 
-    ///Gets the value of the next bit in the stream without advancing the read pointer
-    pub fn peek(&mut self) -> i32 {
-        unsafe { speex_sys::speex_bits_peek(self.backing_mut_ptr()) }
-    }
+    /// Gets the value of the next bit in the stream without advancing the read
+    /// pointer
+    pub fn peek(&mut self) -> i32 { unsafe { speex_sys::speex_bits_peek(self.backing_mut_ptr()) } }
 
-    /// Gets the value of the next `num_bits` in the stream without advancing the read pointer
+    /// Gets the value of the next `num_bits` in the stream without advancing
+    /// the read pointer
     pub fn peek_unsigned(&mut self, num_bits: i32) -> u32 {
         unsafe { speex_sys::speex_bits_peek_unsigned(self.backing_mut_ptr(), num_bits) }
     }
@@ -146,12 +146,14 @@ impl<'a> SpeexBits<'a> {
         }
     }
 
-    /// Interpret the next number of bits as a signed integer, advancing the read pointer
+    /// Interpret the next number of bits as a signed integer, advancing the
+    /// read pointer
     pub fn unpack_signed(&mut self, num_bits: i32) -> i32 {
         unsafe { speex_sys::speex_bits_unpack_signed(self.backing_mut_ptr(), num_bits) }
     }
 
-    /// Interpret the next number of bits as an unsigned integer, advancing the read pointer
+    /// Interpret the next number of bits as an unsigned integer, advancing the
+    /// read pointer
     pub fn unpacked_unsigned(&mut self, num_bits: i32) -> u32 {
         unsafe { speex_sys::speex_bits_unpack_unsigned(self.backing_mut_ptr(), num_bits) }
     }
@@ -163,8 +165,9 @@ impl<'a> SpeexBits<'a> {
         unsafe { speex_sys::speex_bits_write(self.backing_mut_ptr(), buf_ptr, len) as u32 }
     }
 
-    /// Writes the content of the bitstream to a buffer, writing whole bytes only. Removes any
-    /// bytes that are successfully written from the bitstream.
+    /// Writes the content of the bitstream to a buffer, writing whole bytes
+    /// only. Removes any bytes that are successfully written from the
+    /// bitstream.
     pub fn write_whole_bytes(&mut self, buffer: &mut [u8]) -> u32 {
         let buf_ptr = buffer.as_mut_ptr() as *mut i8;
         let len = buffer.len() as i32;
@@ -175,9 +178,7 @@ impl<'a> SpeexBits<'a> {
 }
 
 impl<'a> Default for SpeexBits<'a> {
-    fn default() -> Self {
-        SpeexBits::new()
-    }
+    fn default() -> Self { SpeexBits::new() }
 }
 
 impl<'a> Drop for SpeexBits<'a> {

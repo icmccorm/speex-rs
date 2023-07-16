@@ -8,13 +8,11 @@
 pub(crate) mod decoder;
 pub(crate) mod encoder;
 
+use std::{error::Error, ffi::c_void, fmt::Display};
+
 pub use decoder::SpeexDecoder;
 pub use encoder::SpeexEncoder;
-
 use speex_sys::{SpeexMode, SPEEX_MODEID_NB, SPEEX_MODEID_UWB, SPEEX_MODEID_WB};
-use std::error::Error;
-use std::ffi::c_void;
-use std::fmt::Display;
 
 /// Possible modes for the encoder and decoder.
 #[repr(i32)]
@@ -27,7 +25,8 @@ pub enum ModeId {
 
 /// Possible submodes for the narrowband mode.
 ///
-/// As wideband and ultra-wideband modes both embed narrowband, this is also used for those.
+/// As wideband and ultra-wideband modes both embed narrowband, this is also
+/// used for those.
 #[repr(i32)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum NbSubmodeId {
@@ -93,7 +92,8 @@ impl From<i32> for WbSubmodeId {
 
 /// Possible submodes for the UWB mode.
 ///
-/// While this is an enum, UWB mode only has one submode, so it's effectively a constant.
+/// While this is an enum, UWB mode only has one submode, so it's effectively a
+/// constant.
 #[repr(i32)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum UwbSubmodeId {
@@ -113,8 +113,8 @@ impl ModeId {
     pub fn get_mode(self) -> &'static SpeexMode {
         unsafe {
             let ptr = speex_sys::speex_lib_get_mode(self as i32);
-            // speexmodes are hard constants defined within the codebase itself, so the backing
-            // memory *should* always be valid. Should.
+            // speexmodes are hard constants defined within the codebase itself, so the
+            // backing memory *should* always be valid. Should.
             let reference: &'static SpeexMode = &*ptr;
             reference
         }
@@ -141,8 +141,8 @@ pub enum ControlError {
     /// The request type passed to the control function was invalid
     /// The parameter is the request type that was passed
     UnknownRequest(i32),
-    /// The parameter passed to the control function was invalid (and probably caused a segfault,
-    /// making this error unreachable)
+    /// The parameter passed to the control function was invalid (and probably
+    /// caused a segfault, making this error unreachable)
     InvalidParameter,
 }
 
@@ -168,16 +168,16 @@ mod private {
 
 /// Trait for the control functions of the encoder and decoder
 ///
-/// This trait is implemented for both the encoder and decoder, and provides a common interface
-/// for the control functions of both.
+/// This trait is implemented for both the encoder and decoder, and provides a
+/// common interface for the control functions of both.
 ///
-/// `ctl` is the only function that needs to be implemented, and is used to call the control
-/// functions of the underlying speex library.
+/// `ctl` is the only function that needs to be implemented, and is used to call
+/// the control functions of the underlying speex library.
 ///
 /// This trait is sealed, and cannot be implemented outside of this crate.
 pub trait ControlFunctions: private::Sealed {
-    /// Internal function used to convert the error codes returned by the control function into
-    /// a result type
+    /// Internal function used to convert the error codes returned by the
+    /// control function into a result type
     fn check_error(err_code: i32, param: Option<i32>) -> Result<(), ControlError> {
         match err_code {
             0 => Ok(()),
@@ -191,9 +191,9 @@ pub trait ControlFunctions: private::Sealed {
     ///
     /// # Safety
     ///
-    /// Implementations of this function call the control functions of the underlying speex library,
-    /// and as such are unsafe. The caller must ensure that the parameters passed to this function
-    /// are valid.
+    /// Implementations of this function call the control functions of the
+    /// underlying speex library, and as such are unsafe. The caller must
+    /// ensure that the parameters passed to this function are valid.
     unsafe fn ctl(&mut self, request: i32, ptr: *mut c_void) -> Result<(), ControlError>;
 
     /// Gets the frame size (in samples) of the encoder/decoder
@@ -361,8 +361,8 @@ pub trait ControlFunctions: private::Sealed {
 
     /// Gets the lookahead value currently in use by the encoder/decoder
     ///
-    /// Sum the lookahead of a Speex decoder and the lookahead of a Speex encoder to get the total
-    /// lookahead.
+    /// Sum the lookahead of a Speex decoder and the lookahead of a Speex
+    /// encoder to get the total lookahead.
     fn get_lookahead(&mut self) -> i32 {
         let mut state = 0;
         let ptr = &mut state as *mut i32 as *mut c_void;

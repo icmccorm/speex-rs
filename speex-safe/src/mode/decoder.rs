@@ -5,15 +5,28 @@
 // obtain one at http://mozilla.org/MPL/2.0/.                                  /
 ////////////////////////////////////////////////////////////////////////////////
 
-use crate::mode::{CoderMode, ControlFunctions, ModeId};
-use crate::{mode, ControlError, NbMode, NbSubmodeId, SpeexBits, UwbMode, WbMode, WbSubmodeId};
-use speex_sys::SpeexMode;
-use std::ffi::{c_float, c_void};
-use std::fmt::{Display, Formatter};
-use std::marker::{PhantomData, PhantomPinned};
+use std::{
+    ffi::{c_float, c_void},
+    fmt::{Display, Formatter},
+    marker::{PhantomData, PhantomPinned},
+};
 
-/// Handle for the encoder, speex represents this as an opaque pointer so this is an unconstructable
-/// type that is always intended to be behind a pointer.
+use speex_sys::SpeexMode;
+
+use crate::{
+    mode,
+    mode::{CoderMode, ControlFunctions, ModeId},
+    ControlError,
+    NbMode,
+    NbSubmodeId,
+    SpeexBits,
+    UwbMode,
+    WbMode,
+    WbSubmodeId,
+};
+
+/// Handle for the encoder, speex represents this as an opaque pointer so this
+/// is an unconstructable type that is always intended to be behind a pointer.
 #[repr(C)]
 pub struct SpeexDecoderHandle {
     _data: [u8; 0],
@@ -25,8 +38,8 @@ impl SpeexDecoderHandle {
     ///
     /// # Safety
     ///
-    /// This allocates, so you *must* call SpeexDecoderHandle::destroy with the handle when created
-    /// once you are done with the handle.
+    /// This allocates, so you *must* call SpeexDecoderHandle::destroy with the
+    /// handle when created once you are done with the handle.
     pub unsafe fn create(mode: &SpeexMode) -> *mut Self {
         let ptr = unsafe {
             let mode_ptr = mode as *const SpeexMode;
@@ -39,8 +52,9 @@ impl SpeexDecoderHandle {
     ///
     /// # Safety
     ///
-    /// This function must *only* be called on a handle that was created with `SpeexDecoderHandle::create`.
-    /// It shouldn't be called on an already destroyed handle.
+    /// This function must *only* be called on a handle that was created with
+    /// `SpeexDecoderHandle::create`. It shouldn't be called on an already
+    /// destroyed handle.
     pub unsafe fn destroy(handle: *mut SpeexDecoderHandle) {
         unsafe {
             speex_sys::speex_decoder_destroy(handle as *mut c_void);
@@ -207,20 +221,14 @@ impl SpeexDecoder<NbMode> {
     }
 
     /// Sets the submode to use for encoding.
-    pub fn set_submode(&mut self, submode: NbSubmodeId) {
-        self.set_low_submode_internal(submode);
-    }
+    pub fn set_submode(&mut self, submode: NbSubmodeId) { self.set_low_submode_internal(submode); }
 
     /// Gets the submode currently in use for encoding.
-    pub fn get_submode(&mut self) -> NbSubmodeId {
-        self.get_low_submode_internal()
-    }
+    pub fn get_submode(&mut self) -> NbSubmodeId { self.get_low_submode_internal() }
 }
 
 impl Default for SpeexDecoder<NbMode> {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 impl SpeexDecoder<WbMode> {
@@ -241,9 +249,7 @@ impl SpeexDecoder<WbMode> {
     }
 
     /// Gets the submode of the narrowband part of the encoder.
-    pub fn get_low_submode(&mut self) -> NbSubmodeId {
-        self.get_low_submode_internal()
-    }
+    pub fn get_low_submode(&mut self) -> NbSubmodeId { self.get_low_submode_internal() }
 
     /// Sets the submode of the wideband part of the encoder.
     pub fn set_high_submode(&mut self, high_mode: WbSubmodeId) {
@@ -251,15 +257,11 @@ impl SpeexDecoder<WbMode> {
     }
 
     /// Gets the submode of the wideband part of the encoder.
-    pub fn get_high_submode(&mut self) -> WbSubmodeId {
-        self.get_high_submode_internal()
-    }
+    pub fn get_high_submode(&mut self) -> WbSubmodeId { self.get_high_submode_internal() }
 }
 
 impl Default for SpeexDecoder<WbMode> {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 impl SpeexDecoder<UwbMode> {
@@ -280,19 +282,13 @@ impl SpeexDecoder<UwbMode> {
     }
 
     /// Gets the submode of the narrowband part of the encoder.
-    pub fn get_low_submode(&mut self) -> NbSubmodeId {
-        self.get_low_submode_internal()
-    }
+    pub fn get_low_submode(&mut self) -> NbSubmodeId { self.get_low_submode_internal() }
 }
 
 impl Default for SpeexDecoder<UwbMode> {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 impl<T: CoderMode> Drop for SpeexDecoder<T> {
-    fn drop(&mut self) {
-        unsafe { SpeexDecoderHandle::destroy(self.encoder_handle) }
-    }
+    fn drop(&mut self) { unsafe { SpeexDecoderHandle::destroy(self.encoder_handle) } }
 }

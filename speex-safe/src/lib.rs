@@ -10,27 +10,35 @@ pub(crate) mod header;
 pub(crate) mod mode;
 pub(crate) mod stereo_state;
 
+use std::{
+    ffi::{c_char, c_void, CStr},
+    ptr::null,
+};
+
 pub use bits::SpeexBits;
 pub use header::SpeexHeader;
-pub use mode::ControlError;
-pub use mode::ControlFunctions;
-pub use mode::ModeId;
-pub use mode::NbMode;
-pub use mode::NbSubmodeId;
-pub use mode::SpeexDecoder;
-pub use mode::SpeexEncoder;
-pub use mode::UwbMode;
-pub use mode::UwbSubmodeId;
-pub use mode::WbMode;
-pub use mode::WbSubmodeId;
-pub use stereo_state::SpeexStereoState;
-
-use speex_sys::{
-    speex_lib_ctl, SPEEX_LIB_GET_EXTRA_VERSION, SPEEX_LIB_GET_MAJOR_VERSION,
-    SPEEX_LIB_GET_MICRO_VERSION, SPEEX_LIB_GET_MINOR_VERSION, SPEEX_LIB_GET_VERSION_STRING,
+pub use mode::{
+    ControlError,
+    ControlFunctions,
+    ModeId,
+    NbMode,
+    NbSubmodeId,
+    SpeexDecoder,
+    SpeexEncoder,
+    UwbMode,
+    UwbSubmodeId,
+    WbMode,
+    WbSubmodeId,
 };
-use std::ffi::{c_char, c_void, CStr};
-use std::ptr::null;
+use speex_sys::{
+    speex_lib_ctl,
+    SPEEX_LIB_GET_EXTRA_VERSION,
+    SPEEX_LIB_GET_MAJOR_VERSION,
+    SPEEX_LIB_GET_MICRO_VERSION,
+    SPEEX_LIB_GET_MINOR_VERSION,
+    SPEEX_LIB_GET_VERSION_STRING,
+};
+pub use stereo_state::SpeexStereoState;
 
 pub fn get_major_version() -> i32 {
     let mut major_version = 0;

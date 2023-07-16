@@ -5,18 +5,20 @@
 // obtain one at http://mozilla.org/MPL/2.0/.                                  /
 ////////////////////////////////////////////////////////////////////////////////
 
-use speex_sys::{SpeexHeader as SysHeader, SpeexMode};
 use std::mem::MaybeUninit;
+
+use speex_sys::{SpeexHeader as SysHeader, SpeexMode};
 
 /// Standard speex stream header
 ///
 /// ## Why doesn't this implement `Drop`?
 ///
 /// You may notice in `speex_sys` there is a `free` function for headers.
-/// The data within `SpeexHeader` is actually entirely stack allocated. There is nothing to be
-/// freed. The `free` is for the arrays/pointers allocated by `packet_to_header` and `header_to_packet`.
-/// For `packet_to_header` instead of using a manual call to free, it is wrapped in a `Vec` which can
-/// manage the memory just fine.
+/// The data within `SpeexHeader` is actually entirely stack allocated. There is
+/// nothing to be freed. The `free` is for the arrays/pointers allocated by
+/// `packet_to_header` and `header_to_packet`. For `packet_to_header` instead of
+/// using a manual call to free, it is wrapped in a `Vec` which can manage the
+/// memory just fine.
 #[derive(Debug, Clone, Copy)]
 pub struct SpeexHeader {
     backing: SysHeader,
@@ -37,7 +39,7 @@ impl SpeexHeader {
         Self { backing }
     }
 
-    //TODO: NONE of this is safe. It's all just a guess.
+    // TODO: NONE of this is safe. It's all just a guess.
 
     pub fn from_packet(packet: &mut [u8]) -> Self {
         let backing = unsafe {

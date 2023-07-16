@@ -12,9 +12,12 @@ include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 #[cfg(test)]
 mod test {
+    use std::{
+        ffi::{c_char, c_void, CStr},
+        ptr::null,
+    };
+
     use super::*;
-    use std::ffi::{c_char, c_void, CStr};
-    use std::ptr::null;
 
     #[test]
     fn linked_correctly() {
