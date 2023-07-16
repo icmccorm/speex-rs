@@ -10,10 +10,8 @@ pub(crate) mod header;
 pub(crate) mod mode;
 pub(crate) mod stereo_state;
 
-use std::{
-    ffi::{c_char, c_void, CStr},
-    ptr::null,
-};
+use std::ffi::{c_char, c_void, CStr};
+use std::ptr::null;
 
 pub use bits::SpeexBits;
 pub use header::SpeexHeader;

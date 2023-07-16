@@ -5,10 +5,8 @@
 // obtain one at http://mozilla.org/MPL/2.0/.                                  /
 ////////////////////////////////////////////////////////////////////////////////
 
-use std::{
-    ffi::{c_char, c_void},
-    mem::MaybeUninit,
-};
+use std::ffi::{c_char, c_void};
+use std::mem::MaybeUninit;
 
 use speex_sys::SpeexBits as SysBits;
 
@@ -22,7 +20,9 @@ pub struct SpeexBits<'a> {
 }
 
 impl<'a> SpeexBits<'a> {
-    pub(crate) fn backing_mut_ptr(&mut self) -> *mut SysBits { &mut self.backing as *mut SysBits }
+    pub(crate) fn backing_mut_ptr(&mut self) -> *mut SysBits {
+        &mut self.backing as *mut SysBits
+    }
 
     /// Creates a new SpeexBits
     pub fn new() -> Self {
@@ -103,7 +103,9 @@ impl<'a> SpeexBits<'a> {
 
     /// Gets the value of the next bit in the stream without advancing the read
     /// pointer
-    pub fn peek(&mut self) -> i32 { unsafe { speex_sys::speex_bits_peek(self.backing_mut_ptr()) } }
+    pub fn peek(&mut self) -> i32 {
+        unsafe { speex_sys::speex_bits_peek(self.backing_mut_ptr()) }
+    }
 
     /// Gets the value of the next `num_bits` in the stream without advancing
     /// the read pointer
@@ -178,7 +180,9 @@ impl<'a> SpeexBits<'a> {
 }
 
 impl<'a> Default for SpeexBits<'a> {
-    fn default() -> Self { SpeexBits::new() }
+    fn default() -> Self {
+        SpeexBits::new()
+    }
 }
 
 impl<'a> Drop for SpeexBits<'a> {

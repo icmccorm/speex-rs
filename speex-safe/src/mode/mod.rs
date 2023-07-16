@@ -8,7 +8,9 @@
 pub(crate) mod decoder;
 pub(crate) mod encoder;
 
-use std::{error::Error, ffi::c_void, fmt::Display};
+use std::error::Error;
+use std::ffi::c_void;
+use std::fmt::Display;
 
 pub use decoder::SpeexDecoder;
 pub use encoder::SpeexEncoder;

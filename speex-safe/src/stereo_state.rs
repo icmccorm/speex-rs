@@ -31,7 +31,9 @@ impl SpeexStereoState {
 }
 
 impl Default for SpeexStereoState {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Drop for SpeexStereoState {

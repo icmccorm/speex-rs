@@ -5,20 +5,13 @@
 // obtain one at http://mozilla.org/MPL/2.0/.                                  /
 ////////////////////////////////////////////////////////////////////////////////
 
-use std::{
-    ffi::c_void,
-    marker::{PhantomData, PhantomPinned},
-};
+use std::ffi::c_void;
+use std::marker::{PhantomData, PhantomPinned};
 
 use speex_sys::SpeexMode;
 
-use crate::{
-    mode,
-    mode::{CoderMode, ControlError, ControlFunctions, ModeId, NbMode, UwbMode, WbMode},
-    NbSubmodeId,
-    SpeexBits,
-    WbSubmodeId,
-};
+use crate::mode::{CoderMode, ControlError, ControlFunctions, ModeId, NbMode, UwbMode, WbMode};
+use crate::{mode, NbSubmodeId, SpeexBits, WbSubmodeId};
 
 /// Handle for the encoder, speex represents this as an opaque pointer so this
 /// is an unconstructable type that is always intended to be behind a pointer.
@@ -162,14 +155,20 @@ impl SpeexEncoder<NbMode> {
     }
 
     /// Sets the submode to use for encoding.
-    pub fn set_submode(&mut self, submode: NbSubmodeId) { self.set_low_submode_internal(submode); }
+    pub fn set_submode(&mut self, submode: NbSubmodeId) {
+        self.set_low_submode_internal(submode);
+    }
 
     /// Gets the submode currently in use for encoding.
-    pub fn get_submode(&mut self) -> NbSubmodeId { self.get_low_submode_internal() }
+    pub fn get_submode(&mut self) -> NbSubmodeId {
+        self.get_low_submode_internal()
+    }
 }
 
 impl Default for SpeexEncoder<NbMode> {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SpeexEncoder<WbMode> {
@@ -190,7 +189,9 @@ impl SpeexEncoder<WbMode> {
     }
 
     /// Gets the submode of the narrowband part of the encoder.
-    pub fn get_low_submode(&mut self) -> NbSubmodeId { self.get_low_submode_internal() }
+    pub fn get_low_submode(&mut self) -> NbSubmodeId {
+        self.get_low_submode_internal()
+    }
 
     /// Sets the submode of the wideband part of the encoder.
     pub fn set_high_submode(&mut self, high_mode: WbSubmodeId) {
@@ -198,11 +199,15 @@ impl SpeexEncoder<WbMode> {
     }
 
     /// Gets the submode of the wideband part of the encoder.
-    pub fn get_high_submode(&mut self) -> WbSubmodeId { self.get_high_submode_internal() }
+    pub fn get_high_submode(&mut self) -> WbSubmodeId {
+        self.get_high_submode_internal()
+    }
 }
 
 impl Default for SpeexEncoder<WbMode> {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SpeexEncoder<UwbMode> {
@@ -223,11 +228,15 @@ impl SpeexEncoder<UwbMode> {
     }
 
     /// Gets the submode of the narrowband part of the encoder.
-    pub fn get_low_submode(&mut self) -> NbSubmodeId { self.get_low_submode_internal() }
+    pub fn get_low_submode(&mut self) -> NbSubmodeId {
+        self.get_low_submode_internal()
+    }
 }
 
 impl Default for SpeexEncoder<UwbMode> {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<T: CoderMode> Drop for SpeexEncoder<T> {
