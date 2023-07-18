@@ -322,6 +322,16 @@ pub enum DynamicDecoder {
 impl DynamicDecoder {
     shared_functions!(DynamicDecoder);
 
+    /// Set whether to use enhancement.
+    pub fn set_enhancement(&mut self, state: bool) {
+        dynamic_mapping!(self, DynamicDecoder, inner => inner.set_enhancement(state))
+    }
+
+    /// Get whether enhancement is turned on or not.
+    pub fn get_enhancement(&mut self) -> bool {
+        dynamic_mapping!(self, DynamicDecoder, inner => inner.get_enhancement())
+    }
+
     pub fn new(mode: ModeId) -> DynamicDecoder {
         match mode {
             ModeId::NarrowBand => DynamicDecoder::Nb(SpeexDecoder::<NbMode>::new()),

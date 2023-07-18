@@ -258,6 +258,16 @@ pub enum DynamicEncoder {
 impl DynamicEncoder {
     shared_functions!(DynamicEncoder);
 
+    /// Sets the analysis complexity of the encoder.
+    pub fn set_complexity(&mut self, complexity: i32) {
+        dynamic_mapping!(self, DynamicEncoder, inner => inner.set_complexity(complexity))
+    }
+
+    /// Gets the analysis complexity of the encoder.
+    pub fn get_complexity(&mut self) -> i32 {
+        dynamic_mapping!(self, DynamicEncoder, inner => inner.get_complexity())
+    }
+
     pub fn new(mode: ModeId) -> DynamicEncoder {
         match mode {
             ModeId::NarrowBand => DynamicEncoder::Nb(SpeexEncoder::<NbMode>::new()),
