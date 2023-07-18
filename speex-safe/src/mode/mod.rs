@@ -25,6 +25,17 @@ pub enum ModeId {
     UltraWideBand = SPEEX_MODEID_UWB,
 }
 
+impl From<i32> for ModeId {
+    fn from(value: i32) -> Self {
+        match value {
+            SPEEX_MODEID_NB => ModeId::NarrowBand,
+            SPEEX_MODEID_WB => ModeId::WideBand,
+            SPEEX_MODEID_UWB => ModeId::UltraWideBand,
+            _ => panic!("Invalid mode id"),
+        }
+    }
+}
+
 /// Possible submodes for the narrowband mode.
 ///
 /// As wideband and ultra-wideband modes both embed narrowband, this is also
