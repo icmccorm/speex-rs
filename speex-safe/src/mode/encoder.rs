@@ -268,6 +268,25 @@ impl DynamicEncoder {
         dynamic_mapping!(self, DynamicEncoder, inner => inner.get_complexity())
     }
 
+    /// Encode one frame of audio into the given bits.
+    pub fn encode(&mut self, input: &mut [f32], bits: &mut SpeexBits) {
+        match self {
+            DynamicEncoder::Nb(inner) => inner.encode(input, bits),
+            DynamicEncoder::Wb(inner) => inner.encode(input, bits),
+            DynamicEncoder::Uwb(inner) => inner.encode(input, bits),
+        }
+    }
+
+    /// Encode one frame of audio into the given bits, using an integer
+    /// representation.
+    pub fn encode_int(&mut self, input: &mut [i16], bits: &mut SpeexBits) {
+        match self {
+            DynamicEncoder::Nb(inner) => inner.encode_int(input, bits),
+            DynamicEncoder::Wb(inner) => inner.encode_int(input, bits),
+            DynamicEncoder::Uwb(inner) => inner.encode_int(input, bits),
+        }
+    }
+
     pub fn new(mode: ModeId) -> DynamicEncoder {
         match mode {
             ModeId::NarrowBand => DynamicEncoder::Nb(SpeexEncoder::<NbMode>::new()),

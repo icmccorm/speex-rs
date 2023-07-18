@@ -332,6 +332,46 @@ impl DynamicDecoder {
         dynamic_mapping!(self, DynamicDecoder, inner => inner.get_enhancement())
     }
 
+    /// Decode one frame of speex data from the bitstream
+    pub fn decode(&mut self, bits: &mut SpeexBits, out: &mut [f32]) -> Result<(), DecoderError> {
+        match self {
+            DynamicDecoder::Nb(inner) => inner.decode(bits, out),
+            DynamicDecoder::Wb(inner) => inner.decode(bits, out),
+            DynamicDecoder::Uwb(inner) => inner.decode(bits, out),
+        }
+    }
+
+    /// Decode one frame of speex data from the bitstream into a new Vec<f32>
+    pub fn decode_to_owned(&mut self, bits: &mut SpeexBits) -> Result<Vec<f32>, DecoderError> {
+        match self {
+            DynamicDecoder::Nb(inner) => inner.decode_to_owned(bits),
+            DynamicDecoder::Wb(inner) => inner.decode_to_owned(bits),
+            DynamicDecoder::Uwb(inner) => inner.decode_to_owned(bits),
+        }
+    }
+
+    /// Decode one frame of speex data from the bitstream, as i16
+    pub fn decode_int(
+        &mut self,
+        bits: &mut SpeexBits,
+        out: &mut [i16],
+    ) -> Result<(), DecoderError> {
+        match self {
+            DynamicDecoder::Nb(inner) => inner.decode_int(bits, out),
+            DynamicDecoder::Wb(inner) => inner.decode_int(bits, out),
+            DynamicDecoder::Uwb(inner) => inner.decode_int(bits, out),
+        }
+    }
+
+    /// Decode one frame of speex data from the bitstream into a new Vec<i16>
+    pub fn decode_int_to_owned(&mut self, bits: &mut SpeexBits) -> Result<Vec<i16>, DecoderError> {
+        match self {
+            DynamicDecoder::Nb(inner) => inner.decode_int_to_owned(bits),
+            DynamicDecoder::Wb(inner) => inner.decode_int_to_owned(bits),
+            DynamicDecoder::Uwb(inner) => inner.decode_int_to_owned(bits),
+        }
+    }
+
     pub fn new(mode: ModeId) -> DynamicDecoder {
         match mode {
             ModeId::NarrowBand => DynamicDecoder::Nb(SpeexDecoder::<NbMode>::new()),
