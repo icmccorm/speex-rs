@@ -5,7 +5,7 @@
 // obtain one at http://mozilla.org/MPL/2.0/.                                  /
 ////////////////////////////////////////////////////////////////////////////////
 
-use std::ffi::{c_float, c_void};
+use std::ffi::c_void;
 use std::fmt::{Display, Formatter};
 use std::marker::{PhantomData, PhantomPinned};
 

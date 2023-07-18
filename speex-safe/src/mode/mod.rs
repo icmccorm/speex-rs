@@ -539,37 +539,37 @@ macro_rules! shared_functions {
         ///
         /// Sum the lookahead of a Speex decoder and the lookahead of a Speex
         /// encoder to get the total lookahead.
-        fn get_lookahead(&mut self) -> i32 {
+        pub fn get_lookahead(&mut self) -> i32 {
             dynamic_mapping!(self, $enum_name, inner => inner.get_lookahead())
         }
 
         /// Sets tuning for Packet-Loss Concealment (expected loss rate)
-        fn set_plc_tuning(&mut self, tuning: i32) {
+        pub fn set_plc_tuning(&mut self, tuning: i32) {
             dynamic_mapping!(self, $enum_name, inner => inner.set_plc_tuning(tuning))
         }
 
         /// Gets current Packet-Loss Concealment tuning value
-        fn get_plc_tuning(&mut self) -> i32 {
+        pub fn get_plc_tuning(&mut self) -> i32 {
             dynamic_mapping!(self, $enum_name, inner => inner.get_plc_tuning())
         }
 
         /// Sets the max bit-rate allowed in VBR mode
-        fn set_vbr_max_bitrate(&mut self, max_bitrate: i32) {
+        pub fn set_vbr_max_bitrate(&mut self, max_bitrate: i32) {
             dynamic_mapping!(self, $enum_name, inner => inner.set_vbr_max_bitrate(max_bitrate))
         }
 
         /// Gets the max bit-rate allowed in VBR mode
-        fn get_vbr_max_bitrate(&mut self) -> i32 {
+        pub fn get_vbr_max_bitrate(&mut self) -> i32 {
             dynamic_mapping!(self, $enum_name, inner => inner.get_vbr_max_bitrate())
         }
 
         /// Enables or disables highpass filtering of the input/output
-        fn set_highpass(&mut self, highpass: bool) {
+        pub fn set_highpass(&mut self, highpass: bool) {
             dynamic_mapping!(self, $enum_name, inner => inner.set_highpass(highpass))
         }
 
         /// Gets whether highpass filtering of the input/output is enabled
-        fn get_highpass(&mut self) -> bool {
+        pub fn get_highpass(&mut self) -> bool {
             dynamic_mapping!(self, $enum_name, inner => inner.get_highpass())
         }
     };
