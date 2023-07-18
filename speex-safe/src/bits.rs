@@ -113,6 +113,13 @@ impl<'a> SpeexBits<'a> {
         unsafe { speex_sys::speex_bits_peek_unsigned(self.backing_mut_ptr(), num_bits) }
     }
 
+    pub fn read_from(&mut self, buffer: &mut [u8]) {
+        unsafe {
+            let ptr = buffer.as_mut_ptr() as *mut c_char;
+            speex_sys::speex_bits_read_from(self.backing_mut_ptr(), ptr, buffer.len() as i32);
+        }
+    }
+
     /// Appends bytes to the bitstream
     pub fn read_whole_bytes(&mut self, bytes: &[u8]) {
         unsafe {
