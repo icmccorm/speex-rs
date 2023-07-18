@@ -7,6 +7,7 @@ repository = "https://github.com/actioninja/speex-rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+speex-safe = { path = "speex-safe", version = "0.2.0" }
 
 [workspace]
 members = [

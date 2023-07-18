@@ -18,6 +18,8 @@ pub use header::SpeexHeader;
 pub use mode::{
     ControlError,
     ControlFunctions,
+    DynamicDecoder,
+    DynamicEncoder,
     ModeId,
     NbMode,
     NbSubmodeId,

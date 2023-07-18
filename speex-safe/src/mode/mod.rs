@@ -12,8 +12,8 @@ use std::error::Error;
 use std::ffi::c_void;
 use std::fmt::Display;
 
-pub use decoder::SpeexDecoder;
-pub use encoder::SpeexEncoder;
+pub use decoder::{DynamicDecoder, SpeexDecoder};
+pub use encoder::{DynamicEncoder, SpeexEncoder};
 use speex_sys::{SpeexMode, SPEEX_MODEID_NB, SPEEX_MODEID_UWB, SPEEX_MODEID_WB};
 
 /// Possible modes for the encoder and decoder.
@@ -428,6 +428,151 @@ pub trait ControlFunctions: private::Sealed {
         }
         state != 0
     }
+}
+
+#[macro_export]
+macro_rules! dynamic_mapping {
+    ($name:expr, $enum_name:ident, $inner:pat => $action:expr) => {
+        match $name {
+            $enum_name::Nb($inner) => $action,
+            $enum_name::Wb($inner) => $action,
+            $enum_name::Uwb($inner) => $action,
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! shared_functions {
+    ($enum_name:ident) => {
+        /// Gets the frame size (in samples) of the encoder/decoder
+        pub fn get_frame_size(&mut self) -> i32 {
+            dynamic_mapping!(self, $enum_name, inner => inner.get_frame_size())
+        }
+
+        /// Sets whether Variable BitRate is enabled or not
+        pub fn set_vbr(&mut self, vbr: bool) {
+            dynamic_mapping!(self, $enum_name, inner => inner.set_vbr(vbr))
+        }
+
+        /// Gets whether Variable BitRate is enabled or not
+        pub fn get_vbr(&mut self) -> bool {
+            dynamic_mapping!(self, $enum_name, inner => inner.get_vbr())
+        }
+
+        /// Sets the VBR quality of the encoder/decoder
+        ///
+        /// The value should be between 0 and 10, with 10 being the highest quality.
+        pub fn set_vbr_quality(&mut self, quality: f32) {
+            dynamic_mapping!(self, $enum_name, inner => inner.set_vbr_quality(quality))
+        }
+
+        /// Gets the VBR quality of the encoder/decoder
+        pub fn get_vbr_quality(&mut self) -> f32 {
+            dynamic_mapping!(self, $enum_name, inner => inner.get_vbr_quality())
+        }
+
+        /// Sets whether Voice Activity Detection is enabled or not
+        pub fn set_vad(&mut self, vad: bool) {
+            dynamic_mapping!(self, $enum_name, inner => inner.set_vad(vad))
+        }
+
+        /// Gets whether Voice Activity Detection is enabled or not
+        pub fn get_vad(&mut self) -> bool {
+            dynamic_mapping!(self, $enum_name, inner => inner.get_vad())
+        }
+
+        /// Sets the Average BitRate of the encoder/decoder
+        pub fn set_abr(&mut self, abr: i32) {
+            dynamic_mapping!(self, $enum_name, inner => inner.set_abr(abr))
+        }
+
+        /// Gets the Average BitRate of the encoder/decoder
+        pub fn get_abr(&mut self) -> i32 {
+            dynamic_mapping!(self, $enum_name, inner => inner.get_abr())
+        }
+
+        /// Sets the overall quality of the encoder/decoder
+        /// The value should be between 0 and 10, with 10 being the highest quality.
+        /// Default is 8.
+        pub fn set_quality(&mut self, quality: i32) {
+            dynamic_mapping!(self, $enum_name, inner => inner.set_quality(quality))
+        }
+
+        /// Sets the current bitrate of the encoder/decoder
+        pub fn set_bitrate(&mut self, bitrate: i32) {
+            dynamic_mapping!(self, $enum_name, inner => inner.set_bitrate(bitrate))
+        }
+
+        /// Gets the current bitrate of the encoder/decoder
+        pub fn get_bitrate(&mut self) -> i32 {
+            dynamic_mapping!(self, $enum_name, inner => inner.get_bitrate())
+        }
+
+        /// Sets the sampling rate used for bitrate computation
+        pub fn set_sampling_rate(&mut self, samplingrate: i32) {
+            dynamic_mapping!(self, $enum_name, inner => inner.set_sampling_rate(samplingrate))
+        }
+
+        /// Gets the sampling rate used for bitrate computation
+        pub fn get_sampling_rate(&mut self) -> i32 {
+            dynamic_mapping!(self, $enum_name, inner => inner.get_sampling_rate())
+        }
+
+        /// resets the encoder/decoder memories to zero
+        pub fn reset_state(&mut self) {
+            dynamic_mapping!(self, $enum_name, inner => inner.reset_state())
+        }
+
+        /// Sets whether submode encoding is done in each frame
+        ///
+        /// Note that false breaks the specification for the format
+        pub fn set_submode_encoding(&mut self, submode: bool) {
+            dynamic_mapping!(self, $enum_name, inner => inner.set_submode_encoding(submode))
+        }
+
+        /// Gets whether submode encoding is enabled or not
+        pub fn get_submode_encoding(&mut self) -> bool {
+            dynamic_mapping!(self, $enum_name, inner => inner.get_submode_encoding())
+        }
+
+        /// Gets the lookahead value currently in use by the encoder/decoder
+        ///
+        /// Sum the lookahead of a Speex decoder and the lookahead of a Speex
+        /// encoder to get the total lookahead.
+        fn get_lookahead(&mut self) -> i32 {
+            dynamic_mapping!(self, $enum_name, inner => inner.get_lookahead())
+        }
+
+        /// Sets tuning for Packet-Loss Concealment (expected loss rate)
+        fn set_plc_tuning(&mut self, tuning: i32) {
+            dynamic_mapping!(self, $enum_name, inner => inner.set_plc_tuning(tuning))
+        }
+
+        /// Gets current Packet-Loss Concealment tuning value
+        fn get_plc_tuning(&mut self) -> i32 {
+            dynamic_mapping!(self, $enum_name, inner => inner.get_plc_tuning())
+        }
+
+        /// Sets the max bit-rate allowed in VBR mode
+        fn set_vbr_max_bitrate(&mut self, max_bitrate: i32) {
+            dynamic_mapping!(self, $enum_name, inner => inner.set_vbr_max_bitrate(max_bitrate))
+        }
+
+        /// Gets the max bit-rate allowed in VBR mode
+        fn get_vbr_max_bitrate(&mut self) -> i32 {
+            dynamic_mapping!(self, $enum_name, inner => inner.get_vbr_max_bitrate())
+        }
+
+        /// Enables or disables highpass filtering of the input/output
+        fn set_highpass(&mut self, highpass: bool) {
+            dynamic_mapping!(self, $enum_name, inner => inner.set_highpass(highpass))
+        }
+
+        /// Gets whether highpass filtering of the input/output is enabled
+        fn get_highpass(&mut self) -> bool {
+            dynamic_mapping!(self, $enum_name, inner => inner.get_highpass())
+        }
+    };
 }
 
 /// Marker trait used to specify the mode of the de/encoder.

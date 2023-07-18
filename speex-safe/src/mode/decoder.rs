@@ -12,7 +12,18 @@ use std::marker::{PhantomData, PhantomPinned};
 use speex_sys::SpeexMode;
 
 use crate::mode::{CoderMode, ControlFunctions, ModeId};
-use crate::{mode, ControlError, NbMode, NbSubmodeId, SpeexBits, UwbMode, WbMode, WbSubmodeId};
+use crate::{
+    dynamic_mapping,
+    mode,
+    shared_functions,
+    ControlError,
+    NbMode,
+    NbSubmodeId,
+    SpeexBits,
+    UwbMode,
+    WbMode,
+    WbSubmodeId,
+};
 
 /// Handle for the encoder, speex represents this as an opaque pointer so this
 /// is an unconstructable type that is always intended to be behind a pointer.
@@ -297,5 +308,46 @@ impl Default for SpeexDecoder<UwbMode> {
 impl<T: CoderMode> Drop for SpeexDecoder<T> {
     fn drop(&mut self) {
         unsafe { SpeexDecoderHandle::destroy(self.encoder_handle) }
+    }
+}
+
+/// An enumeration over the different encoder modes.
+/// For usecases where the decoder mode is not known at compile time.
+pub enum DynamicDecoder {
+    Nb(SpeexDecoder<NbMode>),
+    Wb(SpeexDecoder<WbMode>),
+    Uwb(SpeexDecoder<UwbMode>),
+}
+
+impl DynamicDecoder {
+    shared_functions!(DynamicDecoder);
+
+    pub fn new(mode: ModeId) -> DynamicDecoder {
+        match mode {
+            ModeId::NarrowBand => DynamicDecoder::Nb(SpeexDecoder::<NbMode>::new()),
+            ModeId::WideBand => DynamicDecoder::Wb(SpeexDecoder::<WbMode>::new()),
+            ModeId::UltraWideBand => DynamicDecoder::Uwb(SpeexDecoder::<UwbMode>::new()),
+        }
+    }
+
+    pub fn into_nb(self) -> Option<SpeexDecoder<NbMode>> {
+        match self {
+            DynamicDecoder::Nb(nb) => Some(nb),
+            _ => None,
+        }
+    }
+
+    pub fn into_wb(self) -> Option<SpeexDecoder<WbMode>> {
+        match self {
+            DynamicDecoder::Wb(wb) => Some(wb),
+            _ => None,
+        }
+    }
+
+    pub fn into_uwb(self) -> Option<SpeexDecoder<UwbMode>> {
+        match self {
+            DynamicDecoder::Uwb(uwb) => Some(uwb),
+            _ => None,
+        }
     }
 }

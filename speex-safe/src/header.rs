@@ -41,7 +41,7 @@ impl SpeexHeader {
 
     // TODO: NONE of this is safe. It's all just a guess.
 
-    pub fn from_packet(packet: &mut [u8]) -> Self {
+    pub unsafe fn from_packet(packet: &mut [u8]) -> Self {
         let backing = unsafe {
             let ptr = packet.as_mut_ptr() as *mut i8;
             let length = packet.len() as i32;
@@ -53,7 +53,7 @@ impl SpeexHeader {
         Self { backing }
     }
 
-    pub fn make_packet(&mut self) -> Vec<u8> {
+    pub unsafe fn make_packet(&mut self) -> Vec<u8> {
         let ptr = &mut self.backing as *mut SysHeader;
         let mut size: i32 = 0;
         let size_ptr = &mut size as *mut i32;

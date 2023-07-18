@@ -11,7 +11,7 @@ use std::marker::{PhantomData, PhantomPinned};
 use speex_sys::SpeexMode;
 
 use crate::mode::{CoderMode, ControlError, ControlFunctions, ModeId, NbMode, UwbMode, WbMode};
-use crate::{mode, NbSubmodeId, SpeexBits, WbSubmodeId};
+use crate::{dynamic_mapping, mode, shared_functions, NbSubmodeId, SpeexBits, WbSubmodeId};
 
 /// Handle for the encoder, speex represents this as an opaque pointer so this
 /// is an unconstructable type that is always intended to be behind a pointer.
@@ -246,6 +246,48 @@ impl<T: CoderMode> Drop for SpeexEncoder<T> {
         }
     }
 }
+
+/// An enumeration over the different encoder modes.
+/// For usecases where the encoder mode is not known at compile time.
+pub enum DynamicEncoder {
+    Nb(SpeexEncoder<NbMode>),
+    Wb(SpeexEncoder<WbMode>),
+    Uwb(SpeexEncoder<UwbMode>),
+}
+
+impl DynamicEncoder {
+    shared_functions!(DynamicEncoder);
+
+    pub fn new(mode: ModeId) -> DynamicEncoder {
+        match mode {
+            ModeId::NarrowBand => DynamicEncoder::Nb(SpeexEncoder::<NbMode>::new()),
+            ModeId::WideBand => DynamicEncoder::Wb(SpeexEncoder::<WbMode>::new()),
+            ModeId::UltraWideBand => DynamicEncoder::Uwb(SpeexEncoder::<UwbMode>::new()),
+        }
+    }
+
+    pub fn into_nb(self) -> Option<SpeexEncoder<NbMode>> {
+        match self {
+            DynamicEncoder::Nb(nb) => Some(nb),
+            _ => None,
+        }
+    }
+
+    pub fn into_wb(self) -> Option<SpeexEncoder<WbMode>> {
+        match self {
+            DynamicEncoder::Wb(wb) => Some(wb),
+            _ => None,
+        }
+    }
+
+    pub fn into_uwb(self) -> Option<SpeexEncoder<UwbMode>> {
+        match self {
+            DynamicEncoder::Uwb(uwb) => Some(uwb),
+            _ => None,
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod test {
