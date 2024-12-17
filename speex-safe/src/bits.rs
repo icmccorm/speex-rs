@@ -29,7 +29,7 @@ impl<'a> SpeexBits<'a> {
         let backing = unsafe {
             // SpeexBits has several padding fields reserved
             // for future use. These are left uninitialized by the C
-            // library, so we zero them out here to ensure that the 
+            // library, so we zero them out here to ensure that the
             // struct is fully initialized when we call assume_init()
             let mut uninit: MaybeUninit<SysBits> = MaybeUninit::zeroed();
             let ptr = uninit.as_mut_ptr();
