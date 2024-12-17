@@ -27,7 +27,11 @@ impl<'a> SpeexBits<'a> {
     /// Creates a new SpeexBits
     pub fn new() -> Self {
         let backing = unsafe {
-            let mut uninit: MaybeUninit<SysBits> = MaybeUninit::uninit();
+            // SpeexBits has several padding fields reserved
+            // for future use. These are left uninitialized by the C
+            // library, so we zero them out here to ensure that the 
+            // struct is fully initialized when we call assume_init()
+            let mut uninit: MaybeUninit<SysBits> = MaybeUninit::zeroed();
             let ptr = uninit.as_mut_ptr();
 
             speex_sys::speex_bits_init(ptr);
